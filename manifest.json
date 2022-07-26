@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "xiMatrix",
+  "description": "",
+  "version": "0.0.0",
+  "browser_action": {
+    "default_title": "xiMatrix",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["bg.js"]
+  },
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ]
+}
