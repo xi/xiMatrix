@@ -16,7 +16,7 @@ shared.TYPE_MAP = {
 
 shared.shouldAllow = function(rules, context, hostname, type) {
     var hostnames = ['*', hostname];
-    if (context === hostname) {
+    if (context === hostname && context !== '*') {
         hostnames.push('first-party');
     }
     var parts = hostname.split('.');
