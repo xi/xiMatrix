@@ -9,6 +9,38 @@ var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
 };
 
+var getHostnames = function(data) {
+    var hostnames = [];
+
+    var addSubdomains = function(h) {
+        if (['inline', 'first-party', '*'].includes(h)) {
+            return;
+        }
+        hostnames.unshift(h);
+        var parts = h.split('.');
+        while (parts.length > 2) {
+            parts.shift();
+            hostnames.unshift(parts.join('.'));
+        }
+    };
+
+    for (const hostname in data.rules) {
+        addSubdomains(hostname);
+    }
+    for (const hostname in data.requests) {
+        addSubdomains(hostname);
+    }
+
+    hostnames = hostnames
+        .map(h => h.split('.').reverse())
+        .sort()
+        .map(h => h.reverse().join('.'));
+
+    addSubdomains(data.context);
+
+    return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
+};
+
 var createCheckbox = function(hostname, type, rule, group) {
     var input = document.createElement('input');
     input.type = 'checkbox';
@@ -88,7 +120,7 @@ sendMessage('get').then(data => {
     table.append(createRow('inline', data.rules));
     table.append(createRow('first-party', data.globalRules));
 
-    for (const hostname in data.requests) {
+    for (const hostname of getHostnames(data)) {
         table.append(createRow(hostname, data.rules));
     }
 });

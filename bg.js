@@ -96,6 +96,7 @@ browser.runtime.onMessage.addListener(msg => {
         return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
             return {
+                context: context,
                 rules: rules[context] || {},
                 globalRules: rules['*'] || {},
                 requests: requests[tab.id] || {},
