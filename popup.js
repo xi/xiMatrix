@@ -42,9 +42,41 @@ var getHostnames = function(data) {
 };
 
 sendMessage('get').then(data => {
+    var shouldAllow = function(context, hostname, type) {
+        var hostnames = ['*', hostname];
+        if (context === hostname) {
+            hostnames.push('first-party');
+        }
+        var parts = hostname.split('.');
+        while (parts.length > 2) {
+            parts.shift();
+            hostnames.push(parts.join('.'));
+        }
+
+        return [context, '*'].some(c => {
+            return data.rules[c] && hostnames.some(h => {
+                return data.rules[c][h] && [type, '*'].some(t => {
+                    return !!data.rules[c][h][t];
+                });
+            });
+        });
+    };
+
+    var updateInherit = function() {
+        table.querySelectorAll('input').forEach(input => {
+            input.classList.toggle('inherit-allow', shouldAllow(
+                data.context,
+                input.dataset.hostname,
+                input.dataset.type,
+            ));
+        });
+    };
+
     var createCheckbox = function(hostname, type, rule, group) {
         var input = document.createElement('input');
         input.type = 'checkbox';
+        input.dataset.hostname = hostname;
+        input.dataset.type = type;
         input.checked = rule;
         input.onchange = () => {
             if (group) {
@@ -54,6 +86,7 @@ sendMessage('get').then(data => {
                 hostname, type, input.checked
             ]).then(rules => {
                 data.rules = rules;
+                updateInherit();
             });
         };
         if (group) {
@@ -125,4 +158,6 @@ sendMessage('get').then(data => {
     for (const hostname of getHostnames(data)) {
         table.append(createRow(hostname, data.rules[data.context] || {}));
     }
+
+    updateInherit();
 });
