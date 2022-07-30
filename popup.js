@@ -19,6 +19,34 @@ browser.runtime.sendMessage({type: 'get'}).then(requests => {
             td.textContent = requests[hostname][type];
             tr.append(td);
 
+            td = document.createElement('td');
+            tr.append(td);
+
+            let label = document.createElement('label');
+            let input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `${hostname}:${type}`;
+            label.append(input);
+            label.append(' allowed');
+            td.append(label);
+
+            label = document.createElement('label');
+            input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `${hostname}:${type}`;
+            input.checked = true;
+            label.append(input);
+            label.append(' unset');
+            td.append(label);
+
+            label = document.createElement('label');
+            input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `${hostname}:${type}`;
+            label.append(input);
+            label.append(' blocked');
+            td.append(label);
+
             table.append(tr);
         }
     }
