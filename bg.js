@@ -1,25 +1,7 @@
 /* global browser */
 
-const TYPES = {
-    'stylesheet': 'css',
-    'font': 'font',
-    'image': 'media',
-    'imageset': 'media',
-    'media': 'media',
-    'script': 'script',
-    'beacon': 'xhr',
-    'xmlhttprequest': 'xhr',
-    'websocket': 'xhr',
-    'sub_frame': 'frame',
-};
-
 var rules = {};
 var requests = {};
-
-var getHostname = function(url) {
-    var u = new URL(url);
-    return u.hostname;
-};
 
 var setRule = function(context, hostname, type, rule) {
     if (hostname === 'first-party') {
@@ -64,26 +46,6 @@ var clearRequests = function(tabId) {
     }
 };
 
-var shouldAllow = function(context, hostname, type) {
-    var hostnames = ['*', hostname];
-    if (context === hostname) {
-        hostnames.push('first-party');
-    }
-    var parts = hostname.split('.');
-    while (parts.length > 2) {
-        parts.shift();
-        hostnames.push(parts.join('.'));
-    }
-
-    return [context, '*'].some(c => {
-        return rules[c] && hostnames.some(h => {
-            return rules[c][h] && [type, '*'].some(t => {
-                return rules[c][h][t];
-            });
-        });
-    });
-};
-
 var getCurrentTab = function() {
     return browser.tabs.query({
         active: true,
@@ -95,9 +57,14 @@ browser.runtime.onMessage.addListener(msg => {
     if (msg.type === 'get') {
         return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
+
+            var restrictedRules = {};
+            restrictedRules['*'] = rules['*'] || {};
+            restrictedRules[context] = rules[context] || {};
+
             return {
                 context: context,
-                rules: rules,
+                rules: restrictedRules,
                 requests: requests[tab.id] || {},
             };
         });
@@ -126,24 +93,24 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         context = getHostname(details.frameAncestors[last].url);
     }
     var hostname = getHostname(details.url);
-    var type = TYPES[details.type] || 'other';
+    var type = TYPE_MAP[details.type] || 'other';
 
     pushRequest(details.tabId, hostname, type);
 
-    return {cancel: !shouldAllow(context, hostname, type)};
+    return {cancel: !shouldAllow(rules, context, hostname, type)};
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
     var context = getHostname(details.url);
     var policy = [];
 
-    if (!shouldAllow(context, 'inline', 'css')) {
+    if (!shouldAllow(rules, context, 'inline', 'css')) {
         policy.push("style-src 'self' *");
     }
-    if (!shouldAllow(context, 'inline', 'script')) {
+    if (!shouldAllow(rules, context, 'inline', 'script')) {
         policy.push("script-src 'self' *");
     }
-    if (!shouldAllow(context, 'inline', 'media')) {
+    if (!shouldAllow(rules, context, 'inline', 'media')) {
         policy.push("img-src 'self' *");
     }
 

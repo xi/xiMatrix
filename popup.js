@@ -1,7 +1,5 @@
 /* global browser */
 
-var TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
-
 var table = document.querySelector('table');
 
 var sendMessage = function(type, data) {
@@ -41,29 +39,10 @@ var getHostnames = function(data) {
 };
 
 sendMessage('get').then(data => {
-    var shouldAllow = function(context, hostname, type) {
-        var hostnames = ['*', hostname];
-        if (context === hostname) {
-            hostnames.push('first-party');
-        }
-        var parts = hostname.split('.');
-        while (parts.length > 2) {
-            parts.shift();
-            hostnames.push(parts.join('.'));
-        }
-
-        return [context, '*'].some(c => {
-            return data.rules[c] && hostnames.some(h => {
-                return data.rules[c][h] && [type, '*'].some(t => {
-                    return !!data.rules[c][h][t];
-                });
-            });
-        });
-    };
-
     var updateInherit = function() {
         table.querySelectorAll('input').forEach(input => {
             input.classList.toggle('inherit-allow', shouldAllow(
+                data.rules,
                 data.context,
                 input.dataset.hostname,
                 input.dataset.type,
