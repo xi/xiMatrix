@@ -28,7 +28,9 @@ var setRule = function(context, hostname, type, rule) {
     if (!rules[context][hostname]) {
         rules[context][hostname] = {};
     }
-    if (rule === null) {
+    if (rule) {
+        rules[context][hostname][type] = rule;
+    } else {
         delete rules[context][hostname][type];
         if (Object.keys(rules[context][hostname]).length === 0) {
             delete rules[context][hostname];
@@ -36,8 +38,6 @@ var setRule = function(context, hostname, type, rule) {
         if (Object.keys(rules[context]).length === 0) {
             delete rules[context];
         }
-    } else {
-        rules[context][hostname][type] = rule;
     }
     browser.storage.local.set({'rules': rules});
 };

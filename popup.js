@@ -16,7 +16,7 @@ var createRadios = function(hostname, type, rule) {
     var input = document.createElement('input');
     input.type = 'radio';
     input.name = `${hostname}:${type}`;
-    input.checked = rule === true;
+    input.checked = rule;
     input.onchange = () => sendMessage('setRule', [hostname, type, true]);
     label.append(input);
     label.append(' allowed');
@@ -26,18 +26,8 @@ var createRadios = function(hostname, type, rule) {
     input = document.createElement('input');
     input.type = 'radio';
     input.name = `${hostname}:${type}`;
-    input.checked = rule == null;  // but undefined == null
+    input.checked = !rule;
     input.onchange = () => sendMessage('setRule', [hostname, type, null]);
-    label.append(input);
-    label.append(' unset');
-    div.append(label);
-
-    label = document.createElement('label');
-    input = document.createElement('input');
-    input.type = 'radio';
-    input.name = `${hostname}:${type}`;
-    input.checked = rule === false;
-    input.onchange = () => sendMessage('setRule', [hostname, type, false]);
     label.append(input);
     label.append(' blocked');
     div.append(label);
