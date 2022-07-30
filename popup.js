@@ -59,6 +59,8 @@ sendMessage('get').then(data => {
         table.append(tr);
     };
 
+    createRow('inline', '*', '');
+
     for (const hostname in data.requests) {
         for (const type in data.requests[hostname]) {
             createRow(hostname, type, data.requests[hostname][type]);

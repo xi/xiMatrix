@@ -114,6 +114,22 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     return {cancel: !shouldAllow(context, hostname, type)};
 }, {urls: ['<all_urls>']}, ['blocking']);
 
+browser.webRequest.onHeadersReceived.addListener(function(details) {
+    var context = getHostname(details.url);
+    if (!shouldAllow(context, 'inline', '*')) {
+        details.responseHeaders.push({
+            name: 'Content-Security-Policy',
+            value: "default-src 'self' *",
+        });
+    }
+    return {
+        responseHeaders: details.responseHeaders,
+    };
+}, {
+    urls: ['<all_urls>'],
+    types: ['main_frame'],
+}, ['blocking', 'responseHeaders']);
+
 browser.storage.local.get('rules').then(stored => {
     rules = stored.rules || {};
 });
