@@ -6,10 +6,11 @@ var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
 };
 
-sendMessage('get').then(requests => {
-    for (const hostname in requests) {
-        for (const type in requests[hostname]) {
+sendMessage('get').then(data => {
+    for (const hostname in data.requests) {
+        for (const type in data.requests[hostname]) {
             const tr = document.createElement('tr');
+            const rule = data.rules[hostname] ? data.rules[hostname][type] : null;
 
             let td = document.createElement('td');
             td.textContent = hostname;
@@ -20,7 +21,7 @@ sendMessage('get').then(requests => {
             tr.append(td);
 
             td = document.createElement('td');
-            td.textContent = requests[hostname][type];
+            td.textContent = data.requests[hostname][type];
             tr.append(td);
 
             td = document.createElement('td');
@@ -30,6 +31,7 @@ sendMessage('get').then(requests => {
             let input = document.createElement('input');
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
+            input.checked = rule === true;
             input.onchange = () => sendMessage('setRule', [hostname, type, true]);
             label.append(input);
             label.append(' allowed');
@@ -39,7 +41,7 @@ sendMessage('get').then(requests => {
             input = document.createElement('input');
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
-            input.checked = true;
+            input.checked = rule == null;  // but undefined == null
             input.onchange = () => sendMessage('setRule', [hostname, type, null]);
             label.append(input);
             label.append(' unset');
@@ -49,6 +51,7 @@ sendMessage('get').then(requests => {
             input = document.createElement('input');
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
+            input.checked = rule === false;
             input.onchange = () => sendMessage('setRule', [hostname, type, false]);
             label.append(input);
             label.append(' blocked');

@@ -13,11 +13,32 @@ const TYPES = {
     'sub_frame': 'frame',
 };
 
+var rules = {};
 var requests = {};
 
 var getHostname = function(url) {
     var u = new URL(url);
     return u.hostname;
+};
+
+var setRule = function(context, hostname, type, rule) {
+    if (!rules[context]) {
+        rules[context] = {};
+    }
+    if (!rules[context][hostname]) {
+        rules[context][hostname] = {};
+    }
+    if (rule === null) {
+        delete rules[context][hostname][type];
+        if (Object.keys(rules[context][hostname]).length === 0) {
+            delete rules[context][hostname];
+        }
+        if (Object.keys(rules[context]).length === 0) {
+            delete rules[context];
+        }
+    } else {
+        rules[context][hostname][type] = rule;
+    }
 };
 
 var pushRequest = function(tabId, hostname, type) {
@@ -48,9 +69,18 @@ var getCurrentTab = function() {
 
 browser.runtime.onMessage.addListener(msg => {
     if (msg.type === 'get') {
-        return getCurrentTab().then(tab => requests[tab.id]);
+        return getCurrentTab().then(tab => {
+            var context = getHostname(tab.url);
+            return {
+                rules: rules[context] || {},
+                requests: requests[tab.id] || {},
+            };
+        });
     } else if (msg.type === 'setRule') {
-        console.log(msg.data);
+        return getCurrentTab().then(tab => {
+            var context = getHostname(tab.url);
+            setRule(context, msg.data[0], msg.data[1], msg.data[2]);
+        });
     }
 });
 
