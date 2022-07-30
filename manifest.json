@@ -17,6 +17,8 @@
     "scripts": ["bg.js"]
   },
   "permissions": [
+    "tabs",
+    "webNavigation",
     "webRequest",
     "webRequestBlocking",
     "<all_urls>"
