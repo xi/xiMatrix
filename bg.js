@@ -61,6 +61,16 @@ var clearRequests = function(tabId) {
     }
 };
 
+var shouldAllow = function(context, hostname, type) {
+    if (!rules[context]) {
+        return false;
+    } else if (!rules[context][hostname]) {
+        return false;
+    } else {
+        return rules[context][hostname][type];
+    }
+};
+
 var getCurrentTab = function() {
     return browser.tabs.query({
         active: true,
@@ -95,10 +105,14 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         return;
     }
 
+    var context = getHostname(details.documentUrl);
     var hostname = getHostname(details.url);
     var type = TYPES[details.type] || 'other';
+
     pushRequest(details.tabId, hostname, type);
-}, {urls: ['<all_urls>']});
+
+    return {cancel: !shouldAllow(context, hostname, type)};
+}, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.storage.local.get('rules').then(stored => {
     rules = stored.rules || {};
