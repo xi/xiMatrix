@@ -39,8 +39,12 @@ var getHostnames = function(data) {
 };
 
 sendMessage('get').then(data => {
-    var updateInherit = function() {
-        table.querySelectorAll('input').forEach(input => {
+    var updateInherit = function(type) {
+        var selector = 'input';
+        if (type !== '*') {
+            selector += `[data-type="${type}"]`;
+        }
+        table.querySelectorAll(selector).forEach(input => {
             input.classList.toggle('inherit-allow', shouldAllow(
                 data.rules,
                 data.context,
@@ -61,7 +65,7 @@ sendMessage('get').then(data => {
                 hostname, type, input.checked
             ]).then(rules => {
                 data.rules = rules;
-                updateInherit();
+                updateInherit(type);
             });
         };
         return input;
@@ -127,5 +131,5 @@ sendMessage('get').then(data => {
         table.append(createRow(hostname, data.rules[data.context] || {}));
     }
 
-    updateInherit();
+    updateInherit('*');
 });
