@@ -1,12 +1,16 @@
 /* global browser shared */
 
+var context;
+var requests;
+var rules;
+
 var table = document.querySelector('table');
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
 };
 
-var getHostnames = function(data) {
+var getHostnames = function() {
     var hostnames = [];
 
     var addSubdomains = function(h) {
@@ -21,10 +25,10 @@ var getHostnames = function(data) {
         }
     };
 
-    for (const hostname in (data.rules[data.context] || {})) {
+    for (const hostname in rules[context]) {
         addSubdomains(hostname);
     }
-    for (const hostname in data.requests) {
+    for (const hostname in requests) {
         addSubdomains(hostname);
     }
 
@@ -33,102 +37,96 @@ var getHostnames = function(data) {
         .sort()
         .map(h => h.reverse().join('.'));
 
-    addSubdomains(data.context);
+    addSubdomains(context);
 
     return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
 };
 
-sendMessage('get').then(data => {
-    var updateInherit = function(type) {
-        var selector = 'input';
-        if (type !== '*') {
-            selector += `[data-type="${type}"]`;
-        }
-        table.querySelectorAll(selector).forEach(input => {
-            input.classList.toggle('inherit-allow', shared.shouldAllow(
-                data.rules,
-                data.context,
-                input.dataset.hostname,
-                input.dataset.type,
-            ));
+var updateInherit = function(type) {
+    var selector = 'input';
+    if (type !== '*') {
+        selector += `[data-type="${type}"]`;
+    }
+    table.querySelectorAll(selector).forEach(input => {
+        input.classList.toggle('inherit-allow', shared.shouldAllow(
+            rules,
+            context,
+            input.dataset.hostname,
+            input.dataset.type,
+        ));
+    });
+};
+
+var createCheckbox = function(hostname, type) {
+    var input = document.createElement('input');
+    input.type = 'checkbox';
+    input.dataset.hostname = hostname;
+    input.dataset.type = type;
+
+    var c = (hostname === 'first-party') ? '*' : context;
+    input.checked = (rules[c][hostname] || {})[type];
+
+    input.onchange = () => {
+        sendMessage(
+            'setRule',
+            [hostname, type, input.checked],
+        ).then(newRules => {
+            rules = newRules;
+            updateInherit(type);
         });
     };
 
-    var createCheckbox = function(hostname, type, rule) {
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.dataset.hostname = hostname;
-        input.dataset.type = type;
-        input.checked = rule;
-        input.onchange = () => {
-            sendMessage('setRule', [
-                hostname, type, input.checked
-            ]).then(rules => {
-                data.rules = rules;
-                updateInherit(type);
-            });
-        };
-        return input;
-    };
+    return input;
+};
 
-    var createHeader = function(rules) {
-        let tr = document.createElement('tr');
+var createCell = function(tag, hostname, type, text) {
+    const cell = document.createElement(tag);
+    cell.append(createCheckbox(hostname, type));
 
-        tr.append(document.createElement('th'));
+    const span = document.createElement('span');
+    span.textContent = text;
+    cell.append(span);
 
-        for (const type of shared.TYPES) {
-            let rule = rules['*'] ? rules['*'][type] : null;
+    return cell;
+};
 
-            let th = document.createElement('th');
-            th.append(createCheckbox('*', type, rule));
-            tr.append(th);
+var createHeader = function() {
+    var tr = document.createElement('tr');
+    tr.append(document.createElement('th'));
+    for (const type of shared.TYPES) {
+        tr.append(createCell('th', '*', type, type));
+    }
+    return tr;
+};
 
-            let span = document.createElement('span');
-            span.textContent = type;
-            th.append(span);
-        }
+var createRow = function(hostname) {
+    var tr = document.createElement('tr');
+    tr.append(createCell('th', hostname, '*', hostname));
+    for (const type of shared.TYPES) {
+        const count = (requests[hostname] || {})[type];
 
-        return tr;
-    };
-
-    var createRow = function(hostname, rules) {
-        let tr = document.createElement('tr');
-
-        let th = document.createElement('th');
-        let rule = rules[hostname] ? rules[hostname]['*'] : null;
-        th.append(createCheckbox(hostname, '*', rule));
-        tr.append(th);
-
-        let span = document.createElement('span');
-        span.textContent = hostname;
-        th.append(span);
-
-        for (const type of shared.TYPES) {
-            let count = data.requests[hostname] ? data.requests[hostname][type] : null;
-            let rule = rules[hostname] ? rules[hostname][type] : null;
-
-            let td = document.createElement('td');
-            if (hostname !== 'inline' || ['css', 'script', 'media'].includes(type)) {
-                td.append(createCheckbox(hostname, type, rule));
-            } else {
-                td.className = 'disabled';
-            }
+        if (hostname !== 'inline' || ['css', 'script', 'media'].includes(type)) {
+            tr.append(createCell('td', hostname, type, count));
+        } else {
+            const td = document.createElement('td');
+            td.className = 'disabled';
             tr.append(td);
-
-            let span = document.createElement('span');
-            span.textContent = count;
-            td.append(span);
         }
+    }
+    return tr;
+};
 
-        return tr;
-    };
+sendMessage('get').then(data => {
+    context = data.context;
+    requests = data.requests;
+    rules = data.rules;
 
-    table.append(createHeader(data.rules[data.context]));
-    table.append(createRow('inline', data.rules[data.context]));
-    table.append(createRow('first-party', data.rules['*']));
+    table.append(createHeader());
+    table.append(createRow('inline'));
+    table.append(createRow('first-party'));
 
-    for (const hostname of getHostnames(data)) {
-        table.append(createRow(hostname, data.rules[data.context]));
+    for (const hostname of getHostnames()) {
+        table.append(createRow(hostname));
     }
 
     updateInherit('*');
