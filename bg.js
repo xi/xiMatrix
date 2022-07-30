@@ -65,11 +65,18 @@ var clearRequests = function(tabId) {
 };
 
 var shouldAllow = function(context, hostname, type) {
+    var hostnames = ['*', hostname];
+    if (context === hostname) {
+        hostnames.push('first-party');
+    }
+    var parts = hostname.split('.');
+    while (parts.length > 2) {
+        parts.shift();
+        hostnames.push(parts.join('.'));
+    }
+
     return [context, '*'].some(c => {
-        return rules[c] && [hostname, '*', 'first-party'].some(h => {
-            if (h === 'first-party' && context !== hostname) {
-                return false;
-            }
+        return rules[c] && hostnames.some(h => {
             return rules[c][h] && [type, '*'].some(t => {
                 return rules[c][h][t];
             });
