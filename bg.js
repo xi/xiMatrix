@@ -106,6 +106,10 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     }
 
     var context = getHostname(details.documentUrl);
+    if (details.frameAncestors.length) {
+        var last = details.frameAncestors.length - 1;
+        context = getHostname(details.frameAncestors[last].url);
+    }
     var hostname = getHostname(details.url);
     var type = TYPES[details.type] || 'other';
 
