@@ -105,6 +105,7 @@ browser.runtime.onMessage.addListener(msg => {
         return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
             setRule(context, msg.data[0], msg.data[1], msg.data[2]);
+            return rules;
         });
     }
 });

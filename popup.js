@@ -41,25 +41,27 @@ var getHostnames = function(data) {
     return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
 };
 
-var createCheckbox = function(hostname, type, rule, group) {
-    var input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = rule;
-    input.onchange = () => {
-        if (group) {
-            group.classList.toggle('inherit-allow', input.checked);
-        }
-        sendMessage('setRule', [
-            hostname, type, input.checked
-        ]);
-    };
-    if (group) {
-        group.classList.toggle('inherit-allow', !!rule);
-    }
-    return input;
-};
-
 sendMessage('get').then(data => {
+    var createCheckbox = function(hostname, type, rule, group) {
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = rule;
+        input.onchange = () => {
+            if (group) {
+                group.classList.toggle('inherit-allow', input.checked);
+            }
+            sendMessage('setRule', [
+                hostname, type, input.checked
+            ]).then(rules => {
+                data.rules = rules;
+            });
+        };
+        if (group) {
+            group.classList.toggle('inherit-allow', !!rule);
+        }
+        return input;
+    };
+
     var createHeader = function(rules) {
         let tr = document.createElement('tr');
 
