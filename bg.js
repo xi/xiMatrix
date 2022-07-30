@@ -1,7 +1,12 @@
-/* global browser */
+/* global browser shared */
 
 var rules = {};
 var requests = {};
+
+var getHostname = function(url) {
+    var u = new URL(url);
+    return u.hostname;
+};
 
 var setRule = function(context, hostname, type, rule) {
     if (hostname === 'first-party') {
@@ -95,24 +100,24 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         context = getHostname(details.frameAncestors[last].url);
     }
     var hostname = getHostname(details.url);
-    var type = TYPE_MAP[details.type] || 'other';
+    var type = shared.TYPE_MAP[details.type] || 'other';
 
     pushRequest(details.tabId, hostname, type);
 
-    return {cancel: !shouldAllow(rules, context, hostname, type)};
+    return {cancel: !shared.shouldAllow(rules, context, hostname, type)};
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
     var context = getHostname(details.url);
     var policy = [];
 
-    if (!shouldAllow(rules, context, 'inline', 'css')) {
+    if (!shared.shouldAllow(rules, context, 'inline', 'css')) {
         policy.push("style-src 'self' *");
     }
-    if (!shouldAllow(rules, context, 'inline', 'script')) {
+    if (!shared.shouldAllow(rules, context, 'inline', 'script')) {
         policy.push("script-src 'self' *");
     }
-    if (!shouldAllow(rules, context, 'inline', 'media')) {
+    if (!shared.shouldAllow(rules, context, 'inline', 'media')) {
         policy.push("img-src 'self' *");
     }
 

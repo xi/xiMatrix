@@ -1,5 +1,7 @@
-const TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
-const TYPE_MAP = {
+var shared = {};
+
+shared.TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
+shared.TYPE_MAP = {
     'stylesheet': 'css',
     'font': 'font',
     'image': 'media',
@@ -12,12 +14,7 @@ const TYPE_MAP = {
     'sub_frame': 'frame',
 };
 
-var getHostname = function(url) {
-    var u = new URL(url);
-    return u.hostname;
-};
-
-var shouldAllow = function(rules, context, hostname, type) {
+shared.shouldAllow = function(rules, context, hostname, type) {
     var hostnames = ['*', hostname];
     if (context === hostname) {
         hostnames.push('first-party');

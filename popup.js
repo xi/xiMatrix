@@ -1,4 +1,4 @@
-/* global browser */
+/* global browser shared */
 
 var table = document.querySelector('table');
 
@@ -45,7 +45,7 @@ sendMessage('get').then(data => {
             selector += `[data-type="${type}"]`;
         }
         table.querySelectorAll(selector).forEach(input => {
-            input.classList.toggle('inherit-allow', shouldAllow(
+            input.classList.toggle('inherit-allow', shared.shouldAllow(
                 data.rules,
                 data.context,
                 input.dataset.hostname,
@@ -76,7 +76,7 @@ sendMessage('get').then(data => {
 
         tr.append(document.createElement('th'));
 
-        for (const type of TYPES) {
+        for (const type of shared.TYPES) {
             let rule = rules['*'] ? rules['*'][type] : null;
 
             let th = document.createElement('th');
@@ -103,7 +103,7 @@ sendMessage('get').then(data => {
         span.textContent = hostname;
         th.append(span);
 
-        for (const type of TYPES) {
+        for (const type of shared.TYPES) {
             let count = data.requests[hostname] ? data.requests[hostname][type] : null;
             let rule = rules[hostname] ? rules[hostname][type] : null;
 
