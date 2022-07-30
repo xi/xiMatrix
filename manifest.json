@@ -1,6 +1,8 @@
 {
   "manifest_version": 2,
   "name": "xiMatrix",
+  "author": "Tobias Bengfort",
+  "homepage_url": "https://github.com/xi/xiMatrix",
   "description": "block requests based on domain and type",
   "version": "0.0.0",
   "browser_action": {
