@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "browser_action": {
     "default_title": "xiMatrix",
-    "default_popup": "popup.html",
+    "default_popup": "src/popup.html",
     "default_icon": {
       "128": "icon-128.png"
     }
@@ -14,7 +14,7 @@
     "128": "icon-128.png"
   },
   "background": {
-    "scripts": ["shared.js", "bg.js"]
+    "scripts": ["src/shared.js", "src/bg.js"]
   },
   "permissions": [
     "storage",

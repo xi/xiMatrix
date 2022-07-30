@@ -1,4 +1,4 @@
-bundle.zip: manifest.json icon-128.png bg.js popup.html popup.js popup.css
+bundle.zip: manifest.json icon-128.png src/*
 	zip $@ $^
 
 icon-128.png: icon.svg
