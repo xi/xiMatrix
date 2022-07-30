@@ -27,6 +27,13 @@ var setRule = function(context, hostname, type, rule) {
     browser.storage.local.set({'rules': rules});
 };
 
+var restrictRules = function(context) {
+    var restricted = {};
+    restricted['*'] = rules['*'] || {};
+    restricted[context] = rules[context] || {};
+    return restricted;
+};
+
 var pushRequest = function(tabId, hostname, type) {
     if (!requests[tabId]) {
         requests[tabId] = {};
@@ -57,14 +64,9 @@ browser.runtime.onMessage.addListener(msg => {
     if (msg.type === 'get') {
         return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
-
-            var restrictedRules = {};
-            restrictedRules['*'] = rules['*'] || {};
-            restrictedRules[context] = rules[context] || {};
-
             return {
                 context: context,
-                rules: restrictedRules,
+                rules: restrictRules(context),
                 requests: requests[tab.id] || {},
             };
         });
@@ -72,7 +74,7 @@ browser.runtime.onMessage.addListener(msg => {
         return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
             setRule(context, msg.data[0], msg.data[1], msg.data[2]);
-            return rules;
+            return restrictRules(context);
         });
     }
 });
