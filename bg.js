@@ -76,11 +76,13 @@ browser.runtime.onMessage.addListener(msg => {
             };
         });
     } else if (msg.type === 'setRule') {
-        return getCurrentTab().then(tab => {
-            var context = getHostname(tab.url);
-            setRule(context, msg.data[0], msg.data[1], msg.data[2]);
-            return restrictRules(context);
-        });
+        setRule(
+            msg.data.context,
+            msg.data.hostname,
+            msg.data.type,
+            msg.data.value,
+        );
+        return Promise.resolve(restrictRules(msg.data.context));
     }
 });
 

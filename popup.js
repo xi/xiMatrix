@@ -67,10 +67,12 @@ var createCheckbox = function(hostname, type) {
     input.checked = (rules[c][hostname] || {})[type];
 
     input.onchange = () => {
-        sendMessage(
-            'setRule',
-            [hostname, type, input.checked],
-        ).then(newRules => {
+        sendMessage('setRule', {
+            context: context,
+            hostname: hostname,
+            type: type,
+            value: input.checked,
+        }).then(newRules => {
             rules = newRules;
             updateInherit(type);
         });
