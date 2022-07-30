@@ -39,6 +39,7 @@ var setRule = function(context, hostname, type, rule) {
     } else {
         rules[context][hostname][type] = rule;
     }
+    browser.storage.local.set({'rules': rules});
 };
 
 var pushRequest = function(tabId, hostname, type) {
@@ -98,3 +99,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     var type = TYPES[details.type] || 'other';
     pushRequest(details.tabId, hostname, type);
 }, {urls: ['<all_urls>']});
+
+browser.storage.local.get('rules').then(stored => {
+    rules = stored.rules || {};
+});

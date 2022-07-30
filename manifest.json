@@ -17,6 +17,7 @@
     "scripts": ["bg.js"]
   },
   "permissions": [
+    "storage",
     "tabs",
     "webNavigation",
     "webRequest",
