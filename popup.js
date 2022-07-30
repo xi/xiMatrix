@@ -26,6 +26,10 @@ sendMessage('get').then(data => {
         td = document.createElement('td');
         tr.append(td);
 
+        const div = document.createElement('div');
+        div.className = 'radios';
+        td.append(div);
+
         let label = document.createElement('label');
         let input = document.createElement('input');
         input.type = 'radio';
@@ -34,7 +38,7 @@ sendMessage('get').then(data => {
         input.onchange = () => sendMessage('setRule', [hostname, type, true]);
         label.append(input);
         label.append(' allowed');
-        td.append(label);
+        div.append(label);
 
         label = document.createElement('label');
         input = document.createElement('input');
@@ -44,7 +48,7 @@ sendMessage('get').then(data => {
         input.onchange = () => sendMessage('setRule', [hostname, type, null]);
         label.append(input);
         label.append(' unset');
-        td.append(label);
+        div.append(label);
 
         label = document.createElement('label');
         input = document.createElement('input');
@@ -54,7 +58,7 @@ sendMessage('get').then(data => {
         input.onchange = () => sendMessage('setRule', [hostname, type, false]);
         label.append(input);
         label.append(' blocked');
-        td.append(label);
+        div.append(label);
 
         table.append(tr);
     };

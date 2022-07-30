@@ -1,0 +1,60 @@
+:root {
+	--green-light: #d0f0d0;
+	--green-mid: #bad6ba;
+	--green-dark: #080;
+	--red-light: #f8d0d0;
+	--red-mid: #debaba;
+	--red-dark: #c00;
+}
+
+.radios {
+	position: relative;
+	overflow: hidden;
+	width: 2em;
+	max-height: 1.5em;
+}
+.radios:focus-within {
+	outline: 2px solid;
+}
+.radios input {
+	appearance: none;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: 0;
+	z-index: 2;
+	cursor: pointer;
+}
+.radios label:nth-child(1) input {
+	z-index: 2;
+	bottom: 50%;
+}
+.radios label:nth-child(1) input:hover {
+	background: var(--green-mid);
+}
+.radios label:nth-child(2) input {
+	z-index: 4;
+}
+.radios label:nth-child(3) input {
+	z-index: 2;
+	top: 50%;
+}
+.radios label:nth-child(3) input:hover {
+	background: var(--red-mid);
+}
+.radios label:nth-child(1) input:checked {
+	background: var(--green-dark);
+	z-index: 3;
+	bottom: 0;
+}
+.radios label:nth-child(2) input:checked {
+	background: var(--red-light);
+	z-index: 1;
+}
+.radios label:nth-child(3) input:checked {
+	background: var(--red-dark);
+	z-index: 3;
+	top: 0;
+}
