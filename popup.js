@@ -3,7 +3,6 @@
 var TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
 
 var table = document.querySelector('table');
-var colgroup = table.querySelector('colgroup');
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
@@ -72,16 +71,13 @@ sendMessage('get').then(data => {
         });
     };
 
-    var createCheckbox = function(hostname, type, rule, group) {
+    var createCheckbox = function(hostname, type, rule) {
         var input = document.createElement('input');
         input.type = 'checkbox';
         input.dataset.hostname = hostname;
         input.dataset.type = type;
         input.checked = rule;
         input.onchange = () => {
-            if (group) {
-                group.classList.toggle('inherit-allow', input.checked);
-            }
             sendMessage('setRule', [
                 hostname, type, input.checked
             ]).then(rules => {
@@ -89,9 +85,6 @@ sendMessage('get').then(data => {
                 updateInherit();
             });
         };
-        if (group) {
-            group.classList.toggle('inherit-allow', !!rule);
-        }
         return input;
     };
 
@@ -99,16 +92,12 @@ sendMessage('get').then(data => {
         let tr = document.createElement('tr');
 
         tr.append(document.createElement('th'));
-        colgroup.append(document.createElement('col'));
 
         for (const type of TYPES) {
             let rule = rules['*'] ? rules['*'][type] : null;
 
-            let col = document.createElement('col');
-            colgroup.append(col);
-
             let th = document.createElement('th');
-            th.append(createCheckbox('*', type, rule, col));
+            th.append(createCheckbox('*', type, rule));
             tr.append(th);
 
             let span = document.createElement('span');
@@ -124,7 +113,7 @@ sendMessage('get').then(data => {
 
         let th = document.createElement('th');
         let rule = rules[hostname] ? rules[hostname]['*'] : null;
-        th.append(createCheckbox(hostname, '*', rule, tr));
+        th.append(createCheckbox(hostname, '*', rule));
         tr.append(th);
 
         let span = document.createElement('span');
