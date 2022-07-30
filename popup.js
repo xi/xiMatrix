@@ -6,6 +6,43 @@ var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
 };
 
+var createRadios = function(hostname, type, rule) {
+    var div = document.createElement('div');
+    div.className = 'radios';
+
+    var label = document.createElement('label');
+    var input = document.createElement('input');
+    input.type = 'radio';
+    input.name = `${hostname}:${type}`;
+    input.checked = rule === true;
+    input.onchange = () => sendMessage('setRule', [hostname, type, true]);
+    label.append(input);
+    label.append(' allowed');
+    div.append(label);
+
+    label = document.createElement('label');
+    input = document.createElement('input');
+    input.type = 'radio';
+    input.name = `${hostname}:${type}`;
+    input.checked = rule == null;  // but undefined == null
+    input.onchange = () => sendMessage('setRule', [hostname, type, null]);
+    label.append(input);
+    label.append(' unset');
+    div.append(label);
+
+    label = document.createElement('label');
+    input = document.createElement('input');
+    input.type = 'radio';
+    input.name = `${hostname}:${type}`;
+    input.checked = rule === false;
+    input.onchange = () => sendMessage('setRule', [hostname, type, false]);
+    label.append(input);
+    label.append(' blocked');
+    div.append(label);
+
+    return div;
+};
+
 sendMessage('get').then(data => {
     var createRow = function(hostname, type, count) {
         var tr = document.createElement('tr');
@@ -24,41 +61,8 @@ sendMessage('get').then(data => {
         tr.append(td);
 
         td = document.createElement('td');
+        td.append(createRadios(hostname, type, rule));
         tr.append(td);
-
-        const div = document.createElement('div');
-        div.className = 'radios';
-        td.append(div);
-
-        let label = document.createElement('label');
-        let input = document.createElement('input');
-        input.type = 'radio';
-        input.name = `${hostname}:${type}`;
-        input.checked = rule === true;
-        input.onchange = () => sendMessage('setRule', [hostname, type, true]);
-        label.append(input);
-        label.append(' allowed');
-        div.append(label);
-
-        label = document.createElement('label');
-        input = document.createElement('input');
-        input.type = 'radio';
-        input.name = `${hostname}:${type}`;
-        input.checked = rule == null;  // but undefined == null
-        input.onchange = () => sendMessage('setRule', [hostname, type, null]);
-        label.append(input);
-        label.append(' unset');
-        div.append(label);
-
-        label = document.createElement('label');
-        input = document.createElement('input');
-        input.type = 'radio';
-        input.name = `${hostname}:${type}`;
-        input.checked = rule === false;
-        input.onchange = () => sendMessage('setRule', [hostname, type, false]);
-        label.append(input);
-        label.append(' blocked');
-        div.append(label);
 
         table.append(tr);
     };
