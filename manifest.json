@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "xiMatrix",
-  "description": "",
+  "description": "block requests based on domain and type",
   "version": "0.0.0",
   "browser_action": {
     "default_title": "xiMatrix",
