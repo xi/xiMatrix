@@ -118,18 +118,23 @@ var createRow = function(hostname) {
     return tr;
 };
 
-sendMessage('get').then(data => {
-    context = data.context;
-    requests = data.requests;
-    rules = data.rules;
+var loadContext = function(c) {
+    sendMessage('get', c).then(data => {
+        context = data.context;
+        requests = data.requests;
+        rules = data.rules;
 
-    table.append(createHeader());
-    table.append(createRow('inline'));
-    table.append(createRow('first-party'));
+        table.innerHTML = '';
+        table.append(createHeader());
+        table.append(createRow('inline'));
+        table.append(createRow('first-party'));
 
-    for (const hostname of getHostnames()) {
-        table.append(createRow(hostname));
-    }
+        for (const hostname of getHostnames()) {
+            table.append(createRow(hostname));
+        }
 
-    updateInherit('*');
-});
+        updateInherit('*');
+    });
+};
+
+loadContext();

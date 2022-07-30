@@ -68,7 +68,7 @@ var getCurrentTab = function() {
 browser.runtime.onMessage.addListener(msg => {
     if (msg.type === 'get') {
         return getCurrentTab().then(tab => {
-            var context = getHostname(tab.url);
+            var context = msg.data || getHostname(tab.url);
             return {
                 context: context,
                 rules: restrictRules(context),
