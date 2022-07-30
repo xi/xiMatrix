@@ -1,6 +1,6 @@
 /* global browser */
 
-var TYPES = ['css', 'font', 'media', 'script', 'xhr', 'frame', 'other'];
+var TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
 
 var table = document.querySelector('table');
 var colgroup = table.querySelector('colgroup');
