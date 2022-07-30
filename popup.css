@@ -6,23 +6,27 @@
 	--text-dark: #fff;
 }
 
+table {
+	background: var(--red-light);
+	border-spacing: 0;
+}
 th, td {
 	position: relative;
+	border: 1px solid #fff;
 	min-width: 2.4em;
 	line-height: 1.8;
 	text-align: center;
 	font-weight: normal;
 }
-td {
-	background: var(--grey);
-}
 th:first-child {
 	text-align: right;
+}
+td.disabled {
+	background-color: var(--grey);
 }
 
 input {
 	appearance: none;
-	background: var(--red-light);
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -33,6 +37,9 @@ input {
 }
 input:focus-visible {
 	outline: 2px solid;
+}
+.inherit-allow {
+	background: var(--green-light);
 }
 input:checked {
 	background: var(--green-dark);
