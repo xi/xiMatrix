@@ -116,12 +116,25 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
     var context = getHostname(details.url);
-    if (!shouldAllow(context, 'inline', '*')) {
+    var policy = [];
+
+    if (!shouldAllow(context, 'inline', 'css')) {
+        policy.push("style-src 'self' *");
+    }
+    if (!shouldAllow(context, 'inline', 'script')) {
+        policy.push("script-src 'self' *");
+    }
+    if (!shouldAllow(context, 'inline', 'media')) {
+        policy.push("img-src 'self' *");
+    }
+
+    if (policy.length) {
         details.responseHeaders.push({
             name: 'Content-Security-Policy',
-            value: "default-src 'self' *",
+            value: policy.join('; '),
         });
     }
+
     return {
         responseHeaders: details.responseHeaders,
     };

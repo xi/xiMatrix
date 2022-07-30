@@ -59,7 +59,9 @@ sendMessage('get').then(data => {
         table.append(tr);
     };
 
-    createRow('inline', '*', '');
+    createRow('inline', 'css', '');
+    createRow('inline', 'script', '');
+    createRow('inline', 'media', '');
 
     for (const hostname in data.requests) {
         for (const type in data.requests[hostname]) {
