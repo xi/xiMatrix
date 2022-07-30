@@ -94,7 +94,11 @@ var createCell = function(tag, hostname, type, text) {
 
 var createHeader = function() {
     var tr = document.createElement('tr');
-    tr.append(document.createElement('th'));
+
+    var th = document.createElement('th');
+    th.textContent = context;
+    tr.append(th);
+
     for (const type of shared.TYPES) {
         tr.append(createCell('th', '*', type, type));
     }
