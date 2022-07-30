@@ -37,6 +37,7 @@ input {
 }
 input:focus-visible {
 	outline: 2px solid;
+	z-index: 1;
 }
 .inherit-allow {
 	background: var(--green-light);
