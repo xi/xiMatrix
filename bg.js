@@ -26,6 +26,19 @@ var clearRequests = function(tabId) {
     }
 };
 
+var getCurrentTab = function() {
+    return browser.tabs.query({
+        active: true,
+        currentWindow: true,
+    }).then(tabs => tabs[0]);
+};
+
+browser.runtime.onMessage.addListener(msg => {
+    if (msg.type === 'get') {
+        return getCurrentTab().then(tab => requests[tab.id]);
+    }
+});
+
 browser.tabs.onRemoved.addListener(clearRequests);
 browser.webNavigation.onBeforeNavigate.addListener(details => {
     clearRequests(details.tabId);
