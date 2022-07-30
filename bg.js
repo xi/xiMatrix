@@ -1,5 +1,18 @@
 /* global browser */
 
+const TYPES = {
+    'stylesheet': 'css',
+    'font': 'font',
+    'image': 'media',
+    'imageset': 'media',
+    'media': 'media',
+    'script': 'script',
+    'beacon': 'xhr',
+    'xmlhttprequest': 'xhr',
+    'websocket': 'xhr',
+    'sub_frame': 'frame',
+};
+
 var requests = {};
 
 var getHostname = function(url) {
@@ -50,5 +63,6 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     }
 
     var hostname = getHostname(details.url);
-    pushRequest(details.tabId, hostname, details.type);
+    var type = TYPES[details.type] || 'other';
+    pushRequest(details.tabId, hostname, type);
 }, {urls: ['<all_urls>']});
