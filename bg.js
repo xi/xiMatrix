@@ -22,6 +22,9 @@ var getHostname = function(url) {
 };
 
 var setRule = function(context, hostname, type, rule) {
+    if (hostname === 'first-party') {
+        context = '*';
+    }
     if (!rules[context]) {
         rules[context] = {};
     }
@@ -87,6 +90,7 @@ browser.runtime.onMessage.addListener(msg => {
             var context = getHostname(tab.url);
             return {
                 rules: rules[context] || {},
+                globalRules: rules['*'] || {},
                 requests: requests[tab.id] || {},
             };
         });

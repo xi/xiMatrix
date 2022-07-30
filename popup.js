@@ -28,14 +28,14 @@ var createCheckbox = function(hostname, type, rule, group) {
 };
 
 sendMessage('get').then(data => {
-    var createHeader = function() {
+    var createHeader = function(rules) {
         let tr = document.createElement('tr');
 
         tr.append(document.createElement('th'));
         colgroup.append(document.createElement('col'));
 
         for (const type of TYPES) {
-            let rule = data.rules['*'] ? data.rules['*'][type] : null;
+            let rule = rules['*'] ? rules['*'][type] : null;
 
             let col = document.createElement('col');
             colgroup.append(col);
@@ -52,11 +52,11 @@ sendMessage('get').then(data => {
         return tr;
     };
 
-    var createRow = function(hostname) {
+    var createRow = function(hostname, rules) {
         let tr = document.createElement('tr');
 
         let th = document.createElement('th');
-        let rule = data.rules[hostname] ? data.rules[hostname]['*'] : null;
+        let rule = rules[hostname] ? rules[hostname]['*'] : null;
         th.append(createCheckbox(hostname, '*', rule, tr));
         tr.append(th);
 
@@ -66,7 +66,7 @@ sendMessage('get').then(data => {
 
         for (const type of TYPES) {
             let count = data.requests[hostname] ? data.requests[hostname][type] : null;
-            let rule = data.rules[hostname] ? data.rules[hostname][type] : null;
+            let rule = rules[hostname] ? rules[hostname][type] : null;
 
             let td = document.createElement('td');
             if (hostname !== 'inline' || ['css', 'script', 'media'].includes(type)) {
@@ -84,10 +84,11 @@ sendMessage('get').then(data => {
         return tr;
     };
 
-    table.append(createHeader());
-    table.append(createRow('inline'));
+    table.append(createHeader(data.rules));
+    table.append(createRow('inline', data.rules));
+    table.append(createRow('first-party', data.globalRules));
 
     for (const hostname in data.requests) {
-        table.append(createRow(hostname));
+        table.append(createRow(hostname, data.rules));
     }
 });
