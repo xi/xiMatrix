@@ -8,31 +8,14 @@ var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
 };
 
-var createRadios = function(hostname, type, rule) {
-    var div = document.createElement('div');
-    div.className = 'radios';
-
-    var label = document.createElement('label');
+var createCheckbox = function(hostname, type, rule) {
     var input = document.createElement('input');
-    input.type = 'radio';
-    input.name = `${hostname}:${type}`;
+    input.type = 'checkbox';
     input.checked = rule;
-    input.onchange = () => sendMessage('setRule', [hostname, type, true]);
-    label.append(input);
-    label.append(' allowed');
-    div.append(label);
-
-    label = document.createElement('label');
-    input = document.createElement('input');
-    input.type = 'radio';
-    input.name = `${hostname}:${type}`;
-    input.checked = !rule;
-    input.onchange = () => sendMessage('setRule', [hostname, type, null]);
-    label.append(input);
-    label.append(' blocked');
-    div.append(label);
-
-    return div;
+    input.onchange = () => sendMessage('setRule', [
+        hostname, type, input.checked
+    ]);
+    return input;
 };
 
 sendMessage('get').then(data => {
@@ -46,7 +29,7 @@ sendMessage('get').then(data => {
             let rule = data.rules['*'] ? data.rules['*'][type] : null;
 
             let th = document.createElement('th');
-            th.append(createRadios('*', type, rule));
+            th.append(createCheckbox('*', type, rule));
             tr.append(th);
 
             let span = document.createElement('span');
@@ -62,7 +45,7 @@ sendMessage('get').then(data => {
 
         let th = document.createElement('th');
         let rule = data.rules[hostname] ? data.rules[hostname]['*'] : null;
-        th.append(createRadios(hostname, '*', rule));
+        th.append(createCheckbox(hostname, '*', rule));
         tr.append(th);
 
         let span = document.createElement('span');
@@ -75,7 +58,7 @@ sendMessage('get').then(data => {
 
             let td = document.createElement('td');
             if (hostname !== 'inline' || ['css', 'script', 'media'].includes(type)) {
-                td.append(createRadios(hostname, type, rule));
+                td.append(createCheckbox(hostname, type, rule));
             }
             tr.append(td);
 

@@ -1,9 +1,9 @@
 :root {
 	--green-light: #d0f0d0;
-	--green-mid: #bad6ba;
+	--green-dark: #080;
 	--red-light: #f8d0d0;
-	--red-mid: #debaba;
 	--grey: #ccc;
+	--text-dark: #fff;
 }
 
 th, td {
@@ -20,50 +20,28 @@ th:first-child {
 	text-align: right;
 }
 
-.radios {
-	position: absolute;
-	overflow: hidden;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-}
-.radios ~ span {
-	pointer-events: none;
-	position: relative;
-	z-index: 10;
-}
-.radios:focus-within {
-	outline: 2px solid;
-}
-.radios input {
+input {
 	appearance: none;
+	background: var(--red-light);
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	left: 0;
 	right: 0;
 	margin: 0;
-	z-index: 2;
 	cursor: pointer;
 }
-.radios label:nth-child(1) input {
-	z-index: 2;
+input:focus-visible {
+	outline: 2px solid;
 }
-.radios label:nth-child(1) input:hover {
-	background: var(--green-mid);
+input:checked {
+	background: var(--green-dark);
 }
-.radios label:nth-child(2) input {
-	z-index: 2;
-}
-.radios label:nth-child(2) input:hover {
-	background: var(--red-mid);
-}
-.radios label:nth-child(1) input:checked {
-	background: var(--green-light);
+input ~ span {
+	pointer-events: none;
+	position: relative;
 	z-index: 1;
 }
-.radios label:nth-child(2) input:checked {
-	background: var(--red-light);
-	z-index: 1;
+input:checked ~ span {
+	color: var(--text-dark);
 }
