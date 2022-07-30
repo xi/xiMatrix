@@ -43,9 +43,15 @@ sendMessage('get').then(data => {
         tr.append(th);
 
         for (const type of TYPES) {
+            let rule = data.rules['*'] ? data.rules['*'][type] : null;
+
             let th = document.createElement('th');
-            th.textContent = type;
+            th.append(createRadios('*', type, rule));
             tr.append(th);
+
+            let span = document.createElement('span');
+            span.textContent = type;
+            th.append(span);
         }
 
         return tr;
@@ -55,8 +61,13 @@ sendMessage('get').then(data => {
         let tr = document.createElement('tr');
 
         let th = document.createElement('th');
-        th.textContent = hostname;
+        let rule = data.rules[hostname] ? data.rules[hostname]['*'] : null;
+        th.append(createRadios(hostname, '*', rule));
         tr.append(th);
+
+        let span = document.createElement('span');
+        span.textContent = hostname;
+        th.append(span);
 
         for (const type of TYPES) {
             let count = data.requests[hostname] ? data.requests[hostname][type] : null;

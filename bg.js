@@ -62,13 +62,13 @@ var clearRequests = function(tabId) {
 };
 
 var shouldAllow = function(context, hostname, type) {
-    if (!rules[context]) {
-        return false;
-    } else if (!rules[context][hostname]) {
-        return false;
-    } else {
-        return rules[context][hostname][type];
-    }
+    return [context, '*'].some(c => {
+        return rules[c] && [hostname, '*'].some(h => {
+            return rules[c][h] && [type, '*'].some(t => {
+                return rules[c][h][t];
+            });
+        });
+    });
 };
 
 var getCurrentTab = function() {
