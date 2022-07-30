@@ -2,7 +2,11 @@
 
 var table = document.querySelector('table');
 
-browser.runtime.sendMessage({type: 'get'}).then(requests => {
+var sendMessage = function(type, data) {
+    return browser.runtime.sendMessage({type: type, data: data});
+};
+
+sendMessage('get').then(requests => {
     for (const hostname in requests) {
         for (const type in requests[hostname]) {
             const tr = document.createElement('tr');
@@ -26,6 +30,7 @@ browser.runtime.sendMessage({type: 'get'}).then(requests => {
             let input = document.createElement('input');
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
+            input.onchange = () => sendMessage('setRule', [hostname, type, true]);
             label.append(input);
             label.append(' allowed');
             td.append(label);
@@ -35,6 +40,7 @@ browser.runtime.sendMessage({type: 'get'}).then(requests => {
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
             input.checked = true;
+            input.onchange = () => sendMessage('setRule', [hostname, type, null]);
             label.append(input);
             label.append(' unset');
             td.append(label);
@@ -43,6 +49,7 @@ browser.runtime.sendMessage({type: 'get'}).then(requests => {
             input = document.createElement('input');
             input.type = 'radio';
             input.name = `${hostname}:${type}`;
+            input.onchange = () => sendMessage('setRule', [hostname, type, false]);
             label.append(input);
             label.append(' blocked');
             td.append(label);

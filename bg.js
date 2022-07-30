@@ -49,6 +49,8 @@ var getCurrentTab = function() {
 browser.runtime.onMessage.addListener(msg => {
     if (msg.type === 'get') {
         return getCurrentTab().then(tab => requests[tab.id]);
+    } else if (msg.type === 'setRule') {
+        console.log(msg.data);
     }
 });
 
