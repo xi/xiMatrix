@@ -24,7 +24,7 @@ var getHostnames = function(data) {
         }
     };
 
-    for (const hostname in data.rules) {
+    for (const hostname in (data.rules[data.context] || {})) {
         addSubdomains(hostname);
     }
     for (const hostname in data.requests) {
@@ -116,11 +116,11 @@ sendMessage('get').then(data => {
         return tr;
     };
 
-    table.append(createHeader(data.rules));
-    table.append(createRow('inline', data.rules));
-    table.append(createRow('first-party', data.globalRules));
+    table.append(createHeader(data.rules[data.context] || {}));
+    table.append(createRow('inline', data.rules[data.context] || {}));
+    table.append(createRow('first-party', data.rules['*'] || {}));
 
     for (const hostname of getHostnames(data)) {
-        table.append(createRow(hostname, data.rules));
+        table.append(createRow(hostname, data.rules[data.context] || {}));
     }
 });
