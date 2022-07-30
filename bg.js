@@ -63,7 +63,10 @@ var clearRequests = function(tabId) {
 
 var shouldAllow = function(context, hostname, type) {
     return [context, '*'].some(c => {
-        return rules[c] && [hostname, '*'].some(h => {
+        return rules[c] && [hostname, '*', 'first-party'].some(h => {
+            if (h === 'first-party' && context !== hostname) {
+                return false;
+            }
             return rules[c][h] && [type, '*'].some(t => {
                 return rules[c][h][t];
             });
