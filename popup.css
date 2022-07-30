@@ -5,13 +5,34 @@
 	--red-light: #f8d0d0;
 	--red-mid: #debaba;
 	--red-dark: #c00;
+	--grey: #ccc;
+}
+
+th, td {
+	position: relative;
+	min-width: 2.4em;
+	line-height: 1.8;
+	text-align: center;
+}
+td {
+	background: var(--grey);
+}
+th:first-child {
+	text-align: right;
 }
 
 .radios {
-	position: relative;
+	position: absolute;
 	overflow: hidden;
-	width: 2em;
-	max-height: 1.5em;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+.radios ~ span {
+	pointer-events: none;
+	position: relative;
+	z-index: 10;
 }
 .radios:focus-within {
 	outline: 2px solid;

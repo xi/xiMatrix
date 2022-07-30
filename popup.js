@@ -1,5 +1,7 @@
 /* global browser */
 
+var TYPES = ['css', 'font', 'media', 'script', 'xhr', 'frame', 'other'];
+
 var table = document.querySelector('table');
 
 var sendMessage = function(type, data) {
@@ -44,36 +46,50 @@ var createRadios = function(hostname, type, rule) {
 };
 
 sendMessage('get').then(data => {
-    var createRow = function(hostname, type, count) {
-        var tr = document.createElement('tr');
-        var rule = data.rules[hostname] ? data.rules[hostname][type] : null;
+    var createHeader = function() {
+        let tr = document.createElement('tr');
 
-        let td = document.createElement('td');
-        td.textContent = hostname;
-        tr.append(td);
+        let th = document.createElement('th');
+        tr.append(th);
 
-        td = document.createElement('td');
-        td.textContent = type;
-        tr.append(td);
+        for (const type of TYPES) {
+            let th = document.createElement('th');
+            th.textContent = type;
+            tr.append(th);
+        }
 
-        td = document.createElement('td');
-        td.textContent = count;
-        tr.append(td);
-
-        td = document.createElement('td');
-        td.append(createRadios(hostname, type, rule));
-        tr.append(td);
-
-        table.append(tr);
+        return tr;
     };
 
-    createRow('inline', 'css', '');
-    createRow('inline', 'script', '');
-    createRow('inline', 'media', '');
+    var createRow = function(hostname) {
+        let tr = document.createElement('tr');
+
+        let th = document.createElement('th');
+        th.textContent = hostname;
+        tr.append(th);
+
+        for (const type of TYPES) {
+            let count = data.requests[hostname] ? data.requests[hostname][type] : null;
+            let rule = data.rules[hostname] ? data.rules[hostname][type] : null;
+
+            let td = document.createElement('td');
+            if (hostname !== 'inline' || ['css', 'script', 'media'].includes(type)) {
+                td.append(createRadios(hostname, type, rule));
+            }
+            tr.append(td);
+
+            let span = document.createElement('span');
+            span.textContent = count;
+            td.append(span);
+        }
+
+        return tr;
+    };
+
+    table.append(createHeader());
+    table.append(createRow('inline'));
 
     for (const hostname in data.requests) {
-        for (const type in data.requests[hostname]) {
-            createRow(hostname, type, data.requests[hostname][type]);
-        }
+        table.append(createRow(hostname));
     }
 });
