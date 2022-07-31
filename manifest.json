@@ -8,12 +8,10 @@
   "browser_action": {
     "default_title": "xiMatrix",
     "default_popup": "src/popup.html",
-    "default_icon": {
-      "128": "icon-128.png"
-    }
+    "default_icon": "icon.svg"
   },
   "icons": {
-    "128": "icon-128.png"
+    "48": "icon.svg"
   },
   "background": {
     "scripts": ["src/shared.js", "src/bg.js"]
