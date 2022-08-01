@@ -16,13 +16,13 @@ shared.TYPE_MAP = {
 
 shared.shouldAllow = function(rules, context, hostname, type) {
     var hostnames = ['*', hostname];
-    if (context === hostname && context !== '*') {
-        hostnames.push('first-party');
-    }
     var parts = hostname.split('.');
     while (parts.length > 2) {
         parts.shift();
         hostnames.push(parts.join('.'));
+    }
+    if (context !== '*' && hostnames.some(h => h === context)) {
+        hostnames.push('first-party');
     }
 
     return [context, '*'].some(c => {
