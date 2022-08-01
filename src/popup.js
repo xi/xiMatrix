@@ -32,12 +32,18 @@ var getHostnames = function() {
         addSubdomains(hostname);
     }
 
-    hostnames = hostnames
-        .map(h => h.split('.').reverse())
-        .sort()
-        .map(h => h.reverse().join('.'));
-
     addSubdomains(context);
+
+    var contextRoot = context.split('.').slice(-2).join('.');
+    hostnames = hostnames
+        .map(h => {
+            var parts = h.split('.');
+            var root = parts.slice(-2).join('.');
+            var isContext = root === contextRoot ? 0 : 1;
+            return [isContext, parts.reverse()];
+        })
+        .sort()
+        .map(a => a[1].reverse().join('.'));
 
     return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
 };
