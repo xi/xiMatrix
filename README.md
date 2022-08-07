@@ -35,6 +35,4 @@ to allow only those requests you want. Definitely for advanced users.
 
 ## Known issues
 
--	there are no counts for inline code, so you cannot see whether they are
-	relevant for the current page
 -	some cached requests are not included in the request counts

@@ -65,7 +65,7 @@ var getCurrentTab = function() {
     }).then(tabs => tabs[0]);
 };
 
-browser.runtime.onMessage.addListener(msg => {
+browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.type === 'get') {
         return getCurrentTab().then(tab => {
             var context = msg.data || getHostname(tab.url);
@@ -83,6 +83,8 @@ browser.runtime.onMessage.addListener(msg => {
             msg.data.value,
         );
         return Promise.resolve(restrictRules(msg.data.context));
+    } else if (msg.type === 'securitypolicyviolation') {
+        pushRequest(sender.tab.id, 'inline', msg.data);
     }
 });
 

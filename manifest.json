@@ -16,6 +16,11 @@
   "background": {
     "scripts": ["src/shared.js", "src/bg.js"]
   },
+  "content_scripts": [{
+    "js": ["src/content.js"],
+    "matches": ["<all_urls>"],
+    "run_at": "document_start"
+  }],
   "permissions": [
     "storage",
     "tabs",
