@@ -108,7 +108,13 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
     pushRequest(details.tabId, hostname, type);
 
-    return {cancel: !shared.shouldAllow(rules, context, hostname, type)};
+    if (!shared.shouldAllow(rules, context, hostname, type)) {
+        if (details.type === 'sub_frame') {
+            return {redirectUrl: 'data:,' + encodeURIComponent(details.url)};
+        } else {
+            return {cancel: true};
+        }
+    }
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
