@@ -5,6 +5,7 @@ var requests;
 var rules;
 
 var table = document.querySelector('table');
+var rawRules = document.querySelector('.raw-rules');
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
@@ -148,6 +149,22 @@ var loadContext = function(c) {
 };
 
 browser.webNavigation.onBeforeNavigate.addListener(window.close);
+
+rawRules.addEventListener('toggle', () => {
+    if (rawRules.open) {
+        var textarea = rawRules.querySelector('textarea');
+        sendMessage('getAllRules').then(allRules => {
+            textarea.value = JSON.stringify(allRules, null, 2);
+        });
+    }
+});
+
+rawRules.querySelector('form').addEventListener('submit', event => {
+    event.preventDefault();
+    var textarea = rawRules.querySelector('textarea');
+    var newRules = JSON.parse(textarea.value);
+    sendMessage('setAllRules', newRules).then(window.close);
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     loadContext();

@@ -83,6 +83,12 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             msg.data.value,
         );
         return Promise.resolve(restrictRules(msg.data.context));
+    } else if (msg.type === 'getAllRules') {
+        return Promise.resolve(rules);
+    } else if (msg.type === 'setAllRules') {
+        rules = msg.data;
+        browser.storage.local.set({'rules': rules});
+        return Promise.resolve();
     } else if (msg.type === 'securitypolicyviolation') {
         pushRequest(sender.tab.id, 'inline', msg.data);
     }
