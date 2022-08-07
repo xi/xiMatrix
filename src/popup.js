@@ -147,4 +147,6 @@ var loadContext = function(c) {
     });
 };
 
+browser.webNavigation.onBeforeNavigate.addListener(window.close);
+
 loadContext();
