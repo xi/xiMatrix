@@ -1,3 +1,10 @@
+# 0.2.0 (2022-08-08)
+
+-   allow to edit rules as JSON
+-   fix inline counts if allowed
+-   fix outdated help text
+
+
 # 0.1.0 (2022-08-07)
 
 -   close popup on reload
