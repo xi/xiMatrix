@@ -125,24 +125,27 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
     var context = getHostname(details.url);
-    var policy = [];
 
-    if (!shared.shouldAllow(rules, context, 'inline', 'css')) {
-        policy.push("style-src 'self' *");
-    }
-    if (!shared.shouldAllow(rules, context, 'inline', 'script')) {
-        policy.push("script-src 'self' *");
-    }
-    if (!shared.shouldAllow(rules, context, 'inline', 'media')) {
-        policy.push("img-src 'self' *");
-    }
+    var header = type => {
+        if (shared.shouldAllow(rules, context, 'inline', type)) {
+            return 'Content-Security-Policy-Report-Only';
+        } else {
+            return 'Content-Security-Policy';
+        }
+    };
 
-    if (policy.length) {
-        details.responseHeaders.push({
-            name: 'Content-Security-Policy',
-            value: policy.join('; '),
-        });
-    }
+    details.responseHeaders.push({
+        name: header('css'),
+        value: "style-src 'self' *",
+    });
+    details.responseHeaders.push({
+        name: header('script'),
+        value: "script-src 'self' *",
+    });
+    details.responseHeaders.push({
+        name: header('media'),
+        value: "img-src 'self' *",
+    });
 
     return {
         responseHeaders: details.responseHeaders,
