@@ -13,6 +13,7 @@ to allow only those requests you want. Definitely for advanced users.
 	-	uMatrix is no longer maintained. The last release was in July 2021.
 	-	keyboard navigation
 	-	simpler code
+	-	rules are encoded as JSON
 	-	it is possible to control inline scripts, styles, and images
 	-	there is a separate column for fonts
 -	disadvantages / simplifications
@@ -25,12 +26,10 @@ to allow only those requests you want. Definitely for advanced users.
 			tried to produce something that works for me rather than copying every
 			detail.
 	-	it is not currently possible to block cookies
-	-	it is not currently possible to edit or import/export the rules as text
 	-	there is no distinction between temporary and permanent rules
 	-	the popup is not updated while it is open. You have to close and open it
 		again to refresh the data.
 	-	the icon does not show the amount of blocked requests
-	-	there is no reload button in the popup
 	-	blocked images are not replaced by a placeholder
 
 ## Known issues
