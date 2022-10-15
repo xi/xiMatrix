@@ -14,7 +14,8 @@
     "48": "icon.svg"
   },
   "background": {
-    "scripts": ["src/shared.js", "src/bg.js"]
+    "scripts": ["src/shared.js", "src/bg.js"],
+    "persistent": false
   },
   "content_scripts": [{
     "js": ["src/content.js"],
