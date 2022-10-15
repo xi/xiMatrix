@@ -1,3 +1,9 @@
+# 0.2.1 (2022-10-15)
+
+-   fix compatibility with event pages
+-   fix: add DOCTYPE for popup
+
+
 # 0.2.0 (2022-08-08)
 
 -   allow to edit rules as JSON
