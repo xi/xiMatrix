@@ -3,9 +3,8 @@
 var STORAGE_DEFAULTS = {
     'rules': {},
     'requests': {},
+    'recording': true,
 };
-
-var recording = false;
 
 var getHostname = function(url) {
     var u = new URL(url);
@@ -62,21 +61,22 @@ var restrictRules = function(rules, context) {
 };
 
 var pushRequest = function(tabId, hostname, type) {
-    if (!recording) {
-        return Promise.resolve();
-    }
-    return storageChange('requests', requests => {
-        if (!requests[tabId]) {
-            requests[tabId] = {};
+    return storageGet('recording').then(recording => {
+        if (recording) {
+            return storageChange('requests', requests => {
+                if (!requests[tabId]) {
+                    requests[tabId] = {};
+                }
+                if (!requests[tabId][hostname]) {
+                    requests[tabId][hostname] = {};
+                }
+                if (!requests[tabId][hostname][type]) {
+                    requests[tabId][hostname][type] = 0;
+                }
+                requests[tabId][hostname][type] += 1;
+                return requests;
+            });
         }
-        if (!requests[tabId][hostname]) {
-            requests[tabId][hostname] = {};
-        }
-        if (!requests[tabId][hostname][type]) {
-            requests[tabId][hostname][type] = 0;
-        }
-        requests[tabId][hostname][type] += 1;
-        return requests;
     });
 };
 
@@ -102,7 +102,8 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             getCurrentTab(),
             storageGet('rules'),
             storageGet('requests'),
-        ]).then(([tab, rules, requests]) => {
+            storageGet('recording'),
+        ]).then(([tab, rules, requests, recording]) => {
             var context = msg.data || getHostname(tab.url);
             return {
                 context: context,
@@ -123,8 +124,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
-        recording = !recording;
-        return Promise.resolve(recording);
+        return storageChange('recording', recording => !recording);
     }
 });
 
@@ -162,7 +162,10 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
-    return storageGet('rules').then(rules => {
+    return Promise.all([
+        storageGet('rules'),
+        storageGet('recording'),
+    ]).then(([rules, recording]) => {
         var context = getHostname(details.url);
 
         var csp = (type, value) => {
