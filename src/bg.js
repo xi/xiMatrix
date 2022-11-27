@@ -1,5 +1,10 @@
 /* global browser shared */
 
+var STORAGE_DEFAULTS = {
+    'rules': {},
+    'requests': {},
+};
+
 var recording = false;
 
 var getHostname = function(url) {
@@ -7,16 +12,24 @@ var getHostname = function(url) {
     return u.hostname;
 };
 
-var getRules = function() {
-    return browser.storage.local.get('rules').then(data => data.rules || {});
+var storageGet = function(key) {
+    return browser.storage.local.get(key).then(data => {
+        return data[key] ?? STORAGE_DEFAULTS[key];
+    });
 };
 
-var getRequests = function() {
-    return browser.storage.local.get('requests').then(data => data.requests || {});
+var storageChange = function(key, fn) {
+    // even though storage access is async, this is safe as long as the code
+    // in between is sync.
+    return storageGet(key).then(oldValue => {
+        var data = {};
+        data[key] = fn(oldValue);
+        return browser.storage.local.set(data);
+    });
 };
 
 var setRule = function(context, hostname, type, rule) {
-    return getRules().then(rules => {
+    return storageChange('rules', rules => {
         if (hostname === 'first-party') {
             context = '*';
         }
@@ -37,7 +50,7 @@ var setRule = function(context, hostname, type, rule) {
                 delete rules[context];
             }
         }
-        return browser.storage.local.set({'rules': rules});
+        return rules;
     });
 };
 
@@ -52,7 +65,7 @@ var pushRequest = function(tabId, hostname, type) {
     if (!recording) {
         return Promise.resolve();
     }
-    return getRequests().then(requests => {
+    return storageChange('requests', requests => {
         if (!requests[tabId]) {
             requests[tabId] = {};
         }
@@ -63,16 +76,16 @@ var pushRequest = function(tabId, hostname, type) {
             requests[tabId][hostname][type] = 0;
         }
         requests[tabId][hostname][type] += 1;
-        return browser.storage.local.set({'requests': requests});
+        return requests;
     });
 };
 
 var clearRequests = function(tabId) {
-    return getRequests().then(requests => {
+    return storageChange('requests', requests => {
         if (requests[tabId]) {
             delete requests[tabId];
         }
-        return browser.storage.local.set({'requests': requests});
+        return requests;
     });
 };
 
@@ -87,8 +100,8 @@ browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.type === 'get') {
         return Promise.all([
             getCurrentTab(),
-            getRules(),
-            getRequests(),
+            storageGet('rules'),
+            storageGet('requests'),
         ]).then(([tab, rules, requests]) => {
             var context = msg.data || getHostname(tab.url);
             return {
@@ -104,7 +117,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             msg.data.hostname,
             msg.data.type,
             msg.data.value,
-        ).then(getRules).then(rules => {
+        ).then(() => storageGet('rules')).then(rules => {
             return restrictRules(rules, msg.data.context);
         });
     } else if (msg.type === 'securitypolicyviolation') {
@@ -135,7 +148,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
     return Promise.all([
         pushRequest(details.tabId, hostname, type),
-        getRules(),
+        storageGet('rules'),
     ]).then(([_, rules]) => {
         if (!shared.shouldAllow(rules, context, hostname, type)) {
             if (details.type === 'sub_frame') {
@@ -149,7 +162,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
-    return getRules().then(rules => {
+    return storageGet('rules').then(rules => {
         var context = getHostname(details.url);
 
         var csp = (type, value) => {
