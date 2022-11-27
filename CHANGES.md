@@ -1,3 +1,11 @@
+# 0.3.0 (2022-11-27)
+
+-   fix concurrency issue when recording requests
+-   allow to disable recording of requests
+-   move edit raw rules to settings page
+-   add explicit extension ID
+
+
 # 0.2.1 (2022-10-15)
 
 -   fix compatibility with event pages
