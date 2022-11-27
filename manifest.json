@@ -22,6 +22,10 @@
     "matches": ["<all_urls>"],
     "run_at": "document_start"
   }],
+  "options_ui": {
+    "page": "src/settings.html",
+    "open_in_tab": true
+  },
   "permissions": [
     "storage",
     "tabs",

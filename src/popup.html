@@ -6,15 +6,7 @@
 </head>
 <body>
 	<table></table>
-
-	<details class="raw-rules">
-		<summary>Edit raw rules</summary>
-		<form>
-			<textarea rows="10"></textarea>
-			<button>Save</button>
-		</form>
-	</details>
-
+	<button type="button" name="settings">Edit rules</button>
 	<details>
 		<summary>Help</summary>
 		<p>In the table above, the columns represent different types of requests. The rows represent domains. Numbers show how many requests of a given type the current tab tries to make to the given domain. Red cells are blocked, green cells are allowed. Light green cells are allowed indirectly, e.g. because they represent a sub-domain of an allowed domain. Grey cells are disabled.</p>
@@ -25,7 +17,6 @@
 			<li><strong>sub-domains</strong>: If you allow a domain, all of its sub-domains are allowed along with it.</li>
 		</ul>
 	</details>
-
 	<script src="shared.js"></script>
 	<script src="popup.js"></script>
 </body>

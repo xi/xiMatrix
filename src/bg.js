@@ -101,10 +101,6 @@ browser.runtime.onMessage.addListener((msg, sender) => {
         ).then(getRules).then(rules => {
             return restrictRules(rules, msg.data.context);
         });
-    } else if (msg.type === 'getAllRules') {
-        return getRules();
-    } else if (msg.type === 'setAllRules') {
-        return browser.storage.local.set({'rules': msg.data});
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     }
@@ -134,6 +130,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     ]).then(([_, rules]) => {
         if (!shared.shouldAllow(rules, context, hostname, type)) {
             if (details.type === 'sub_frame') {
+                // this can in turn be blocked by a local CSP
                 return {redirectUrl: 'data:,' + encodeURIComponent(details.url)};
             } else {
                 return {cancel: true};

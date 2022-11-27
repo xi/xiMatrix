@@ -6,9 +6,14 @@
 	--text-dark: #fff;
 }
 
+[name="settings"] {
+	float: right;
+}
+
 table {
 	background: var(--red-light);
 	border-spacing: 0;
+	margin-bottom: 0.2em;
 }
 th, td {
 	position: relative;
@@ -52,10 +57,4 @@ input ~ span {
 }
 input:checked ~ span {
 	color: var(--text-dark);
-}
-
-textarea {
-	display: block;
-	width: 100%;
-	resize: vertical;
 }
