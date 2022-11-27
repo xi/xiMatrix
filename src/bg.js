@@ -1,5 +1,7 @@
 /* global browser shared */
 
+var recording = false;
+
 var getHostname = function(url) {
     var u = new URL(url);
     return u.hostname;
@@ -47,6 +49,9 @@ var restrictRules = function(rules, context) {
 };
 
 var pushRequest = function(tabId, hostname, type) {
+    if (!recording) {
+        return Promise.resolve();
+    }
     return getRequests().then(requests => {
         if (!requests[tabId]) {
             requests[tabId] = {};
@@ -90,6 +95,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
                 context: context,
                 rules: restrictRules(rules, context),
                 requests: requests[tab.id] || {},
+                recording: recording,
             };
         });
     } else if (msg.type === 'setRule') {
@@ -103,6 +109,9 @@ browser.runtime.onMessage.addListener((msg, sender) => {
         });
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
+    } else if (msg.type === 'toggleRecording') {
+        recording = !recording;
+        return Promise.resolve(recording);
     }
 });
 
@@ -143,26 +152,24 @@ browser.webRequest.onHeadersReceived.addListener(function(details) {
     return getRules().then(rules => {
         var context = getHostname(details.url);
 
-        var header = type => {
+        var csp = (type, value) => {
+            var name = 'Content-Security-Policy';
             if (shared.shouldAllow(rules, context, 'inline', type)) {
-                return 'Content-Security-Policy-Report-Only';
-            } else {
-                return 'Content-Security-Policy';
+                if (recording) {
+                    name = 'Content-Security-Policy-Report-Only';
+                } else {
+                    return;
+                }
             }
+            details.responseHeaders.push({
+                name: name,
+                value: value,
+            });
         };
 
-        details.responseHeaders.push({
-            name: header('css'),
-            value: "style-src 'self' *",
-        });
-        details.responseHeaders.push({
-            name: header('script'),
-            value: "script-src 'self' *",
-        });
-        details.responseHeaders.push({
-            name: header('media'),
-            value: "img-src 'self' *",
-        });
+        csp('css', "style-src 'self' *");
+        csp('script', "script-src 'self' *");
+        csp('media', "img-src 'self' *");
 
         return {
             responseHeaders: details.responseHeaders,

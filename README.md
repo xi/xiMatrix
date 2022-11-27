@@ -14,6 +14,7 @@ to allow only those requests you want. Definitely for advanced users.
 	-	keyboard navigation
 	-	simpler code
 	-	rules are encoded as JSON
+	-	recording requests can be disabled to improve performance
 	-	it is possible to control inline scripts, styles, and images
 	-	there is a separate column for fonts
 -	disadvantages / simplifications

@@ -5,6 +5,7 @@ var requests;
 var rules;
 
 var table = document.querySelector('table');
+var recording = document.querySelector('[name="recording"]')
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
@@ -133,6 +134,7 @@ var loadContext = function(c) {
         context = data.context;
         requests = data.requests;
         rules = data.rules;
+        recording.checked = data.recording;
 
         table.innerHTML = '';
         table.append(createHeader());
@@ -155,4 +157,8 @@ document.querySelector('[name="settings"]').addEventListener('click', event => {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadContext();
+});
+
+recording.addEventListener('change', event => {
+    sendMessage('toggleRecording');
 });
