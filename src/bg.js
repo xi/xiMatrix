@@ -1,5 +1,7 @@
 /* global browser shared */
 
+var lock = Promise.resolve();
+
 var STORAGE_DEFAULTS = {
     'rules': {},
     'requests': {},
@@ -17,14 +19,17 @@ var storageGet = function(key) {
     });
 };
 
-var storageChange = function(key, fn) {
-    // even though storage access is async, this is safe as long as the code
-    // in between is sync.
+var _storageChange = function(key, fn) {
     return storageGet(key).then(oldValue => {
         var data = {};
         data[key] = fn(oldValue);
         return browser.storage.local.set(data);
     });
+};
+
+var storageChange = function(key, fn) {
+    lock = lock.then(() => _storageChange(key, fn));
+    return lock;
 };
 
 var setRule = function(context, hostname, type, rule) {
