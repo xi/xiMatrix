@@ -4,7 +4,7 @@
   "author": "Tobias Bengfort",
   "homepage_url": "https://github.com/xi/xiMatrix",
   "description": "block requests based on domain and type",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "browser_action": {
     "default_title": "xiMatrix",
     "default_popup": "src/popup.html",

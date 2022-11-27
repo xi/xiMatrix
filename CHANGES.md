@@ -1,3 +1,8 @@
+# 0.3.1 (2022-11-27)
+
+-   fix: do not clear request counts on navigation inside frame
+
+
 # 0.3.0 (2022-11-27)
 
 -   fix concurrency issue when recording requests
