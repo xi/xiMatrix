@@ -35,4 +35,4 @@ to allow only those requests you want. Definitely for advanced users.
 
 ## Known issues
 
--	some cached requests are not included in the request counts
+-	cached requests are not included in the request counts
