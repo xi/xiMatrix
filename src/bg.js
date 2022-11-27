@@ -135,7 +135,9 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 
 browser.tabs.onRemoved.addListener(clearRequests);
 browser.webNavigation.onBeforeNavigate.addListener(details => {
-    return clearRequests(details.tabId);
+    if (details.frameId === 0) {
+        return clearRequests(details.tabId);
+    }
 });
 
 browser.webRequest.onBeforeRequest.addListener(details => {
