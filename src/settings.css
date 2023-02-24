@@ -12,6 +12,7 @@ form {
 	height: 100vh;
 	display: grid;
 	grid-template-rows: 1fr min-content;
+	grid-template-columns: 1fr 1fr;
 	grid-gap: 0.5em;
 	padding: 0.5em;
 }
@@ -24,4 +25,5 @@ textarea {
 button {
 	padding: 0.5em 2em;
 	justify-self: end;
+	grid-column: 1 / 3;
 }
