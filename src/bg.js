@@ -4,6 +4,7 @@ var lock = Promise.resolve();
 
 var STORAGE_DEFAULTS = {
     'rules': {},
+    'savedRules': {},
     'requests': {},
     'recording': true,
 };
@@ -33,36 +34,44 @@ var storageChange = function(key, fn) {
 };
 
 var setRule = function(context, hostname, type, rule) {
-    return storageChange('rules', rules => {
-        if (hostname === 'first-party') {
-            context = '*';
-        }
-        if (!rules[context]) {
-            rules[context] = {};
-        }
-        if (!rules[context][hostname]) {
-            rules[context][hostname] = {};
-        }
-        if (rule) {
-            rules[context][hostname][type] = rule;
-        } else {
-            delete rules[context][hostname][type];
-            if (Object.keys(rules[context][hostname]).length === 0) {
-                delete rules[context][hostname];
+    return storageGet('savedRules').then(savedRules => {
+        return storageChange('rules', rules => {
+            if (hostname === 'first-party') {
+                context = '*';
             }
-            if (Object.keys(rules[context]).length === 0) {
-                delete rules[context];
+            if (!rules[context]) {
+                rules[context] = savedRules[context] || {};
             }
-        }
-        return rules;
+            if (!rules[context][hostname]) {
+                rules[context][hostname] = {};
+            }
+            if (rule) {
+                rules[context][hostname][type] = rule;
+            } else {
+                delete rules[context][hostname][type];
+                if (Object.keys(rules[context][hostname]).length === 0) {
+                    delete rules[context][hostname];
+                }
+                if (Object.keys(rules[context]).length === 0 && !savedRules[context]) {
+                    delete rules[context];
+                }
+            }
+            return rules;
+        });
     });
 };
 
-var restrictRules = function(rules, context) {
-    var restricted = {};
-    restricted['*'] = rules['*'] || {};
-    restricted[context] = rules[context] || {};
-    return restricted;
+var getRules = function(context) {
+    return Promise.all([
+        storageGet('rules'),
+        storageGet('savedRules'),
+    ]).then(([rules, savedRules]) => {
+        var restricted = {};
+        restricted['*'] = rules['*'] || savedRules['*'] || {};
+        restricted[context] = rules[context] || savedRules[context] || {};
+        restricted.dirty = !!rules[context];
+        return restricted;
+    });
 };
 
 var pushRequest = function(tabId, hostname, type) {
@@ -103,19 +112,20 @@ var getCurrentTab = function() {
 
 browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.type === 'get') {
-        return Promise.all([
-            getCurrentTab(),
-            storageGet('rules'),
-            storageGet('requests'),
-            storageGet('recording'),
-        ]).then(([tab, rules, requests, recording]) => {
-            var context = msg.data || getHostname(tab.url);
-            return {
-                context: context,
-                rules: restrictRules(rules, context),
-                requests: requests[tab.id] || {},
-                recording: recording,
-            };
+        return getCurrentTab().then(tab => {
+            var context = getHostname(tab.url);
+            return Promise.all([
+                getRules(context),
+                storageGet('requests'),
+                storageGet('recording'),
+            ]).then(([rules, requests, recording]) => {
+                return {
+                    context: context,
+                    rules: rules,
+                    requests: requests[tab.id] || {},
+                    recording: recording,
+                };
+            });
         });
     } else if (msg.type === 'setRule') {
         return setRule(
@@ -123,9 +133,21 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             msg.data.hostname,
             msg.data.type,
             msg.data.value,
-        ).then(() => storageGet('rules')).then(rules => {
-            return restrictRules(rules, msg.data.context);
-        });
+        ).then(() => getRules(msg.data.context));
+    } else if (msg.type === 'commit') {
+        var r;
+        return storageChange('rules', rules => {
+            r = rules[msg.data];
+            delete rules[msg.data];
+            return rules;
+        }).then(() => storageChange('savedRules', savedRules => {
+            if (Object.keys(r).length === 0) {
+                delete savedRules[msg.data];
+            } else {
+                savedRules[msg.data] = r;
+            }
+            return savedRules;
+        }));
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
@@ -155,7 +177,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
     return Promise.all([
         pushRequest(details.tabId, hostname, type),
-        storageGet('rules'),
+        getRules(context),
     ]).then(([_, rules]) => {
         if (!shared.shouldAllow(rules, context, hostname, type)) {
             if (details.type === 'sub_frame') {
@@ -169,12 +191,11 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
+    var context = getHostname(details.url);
     return Promise.all([
-        storageGet('rules'),
+        getRules(context),
         storageGet('recording'),
     ]).then(([rules, recording]) => {
-        var context = getHostname(details.url);
-
         var csp = (type, value) => {
             var name = 'Content-Security-Policy';
             if (shared.shouldAllow(rules, context, 'inline', type)) {

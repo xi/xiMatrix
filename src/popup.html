@@ -6,11 +6,14 @@
 </head>
 <body>
 	<table></table>
-	<label>
-		<input type="checkbox" name="recording">
-		recording
-	</label>
-	<button type="button" name="settings">Edit rules</button>
+	<div class="toolbar">
+		<label>
+			<input type="checkbox" name="recording">
+			recording
+		</label>
+		<button type="button" name="commit" disabled>Commit</button>
+		<button type="button" name="settings">Edit rules</button>
+	</div>
 	<details>
 		<summary>Help</summary>
 		<p>In the table above, the columns represent different types of requests. The rows represent domains. Numbers (if recording is enabled) show how many requests of a given type the current tab tries to make to the given domain. Red cells are blocked, green cells are allowed. Light green cells are allowed indirectly, e.g. because they represent a sub-domain of an allowed domain. Grey cells are disabled.</p>

@@ -6,6 +6,7 @@ var rules;
 
 var table = document.querySelector('table');
 var recording = document.querySelector('[name="recording"]')
+var commitButton = document.querySelector('[name="commit"]');
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
@@ -81,6 +82,7 @@ var createCheckbox = function(hostname, type) {
             value: input.checked,
         }).then(newRules => {
             rules = newRules;
+            commitButton.disabled = !rules.dirty;
             updateInherit(type);
         });
     };
@@ -129,12 +131,13 @@ var createRow = function(hostname) {
     return tr;
 };
 
-var loadContext = function(c) {
-    sendMessage('get', c).then(data => {
+var loadContext = function() {
+    sendMessage('get').then(data => {
         context = data.context;
         requests = data.requests;
         rules = data.rules;
         recording.checked = data.recording;
+        commitButton.disabled = !rules.dirty;
 
         table.innerHTML = '';
         table.append(createHeader());
@@ -161,4 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 recording.addEventListener('change', event => {
     sendMessage('toggleRecording');
+});
+
+commitButton.addEventListener('click', event => {
+    sendMessage('commit', context).then(() => {
+        commitButton.disabled = true;
+    });
 });

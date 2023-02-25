@@ -27,7 +27,6 @@ to allow only those requests you want. Definitely for advanced users.
 			tried to produce something that works for me rather than copying every
 			detail.
 	-	it is not currently possible to block cookies
-	-	there is no distinction between temporary and permanent rules
 	-	the popup is not updated while it is open. You have to close and open it
 		again to refresh the data.
 	-	the icon does not show the amount of blocked requests
