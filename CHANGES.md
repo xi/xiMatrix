@@ -1,3 +1,9 @@
+# 0.4.0 (2023-02-25)
+
+-   allow to have temporary and permanent rules
+-   fix: add title for settings page
+
+
 # 0.3.1 (2022-11-27)
 
 -   fix: do not clear request counts on navigation inside frame
