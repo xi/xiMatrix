@@ -69,6 +69,7 @@ var getRules = function(context) {
         var restricted = {};
         restricted['*'] = rules['*'] || savedRules['*'] || {};
         restricted[context] = rules[context] || savedRules[context] || {};
+        restricted.dirty = !!rules[context];
         return restricted;
     });
 };

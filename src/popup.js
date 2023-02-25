@@ -82,6 +82,7 @@ var createCheckbox = function(hostname, type) {
             value: input.checked,
         }).then(newRules => {
             rules = newRules;
+            commitButton.disabled = !rules.dirty;
             updateInherit(type);
         });
     };
@@ -136,6 +137,7 @@ var loadContext = function() {
         requests = data.requests;
         rules = data.rules;
         recording.checked = data.recording;
+        commitButton.disabled = !rules.dirty;
 
         table.innerHTML = '';
         table.append(createHeader());
@@ -165,5 +167,7 @@ recording.addEventListener('change', event => {
 });
 
 commitButton.addEventListener('click', event => {
-    sendMessage('commit', context);
+    sendMessage('commit', context).then(() => {
+        commitButton.disabled = true;
+    });
 });
