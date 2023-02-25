@@ -4,6 +4,7 @@ var lock = Promise.resolve();
 
 var STORAGE_DEFAULTS = {
     'rules': {},
+    'savedRules': {},
     'requests': {},
     'recording': true,
 };
@@ -33,36 +34,41 @@ var storageChange = function(key, fn) {
 };
 
 var setRule = function(context, hostname, type, rule) {
-    return storageChange('rules', rules => {
-        if (hostname === 'first-party') {
-            context = '*';
-        }
-        if (!rules[context]) {
-            rules[context] = {};
-        }
-        if (!rules[context][hostname]) {
-            rules[context][hostname] = {};
-        }
-        if (rule) {
-            rules[context][hostname][type] = rule;
-        } else {
-            delete rules[context][hostname][type];
-            if (Object.keys(rules[context][hostname]).length === 0) {
-                delete rules[context][hostname];
+    return storageGet('savedRules').then(savedRules => {
+        return storageChange('rules', rules => {
+            if (hostname === 'first-party') {
+                context = '*';
             }
-            if (Object.keys(rules[context]).length === 0) {
-                delete rules[context];
+            if (!rules[context]) {
+                rules[context] = savedRules[context] || {};
             }
-        }
-        return rules;
+            if (!rules[context][hostname]) {
+                rules[context][hostname] = {};
+            }
+            if (rule) {
+                rules[context][hostname][type] = rule;
+            } else {
+                delete rules[context][hostname][type];
+                if (Object.keys(rules[context][hostname]).length === 0) {
+                    delete rules[context][hostname];
+                }
+                if (Object.keys(rules[context]).length === 0) {
+                    delete rules[context];
+                }
+            }
+            return rules;
+        });
     });
 };
 
 var getRules = function(context) {
-    return storageGet('rules').then(rules => {
+    return Promise.all([
+        storageGet('rules'),
+        storageGet('savedRules'),
+    ]).then(([rules, savedRules]) => {
         var restricted = {};
-        restricted['*'] = rules['*'] || {};
-        restricted[context] = rules[context] || {};
+        restricted['*'] = rules['*'] || savedRules['*'] || {};
+        restricted[context] = rules[context] || savedRules[context] || {};
         return restricted;
     });
 };
