@@ -52,7 +52,7 @@ var setRule = function(context, hostname, type, rule) {
                 if (Object.keys(rules[context][hostname]).length === 0) {
                     delete rules[context][hostname];
                 }
-                if (Object.keys(rules[context]).length === 0) {
+                if (Object.keys(rules[context]).length === 0 && !savedRules[context]) {
                     delete rules[context];
                 }
             }
@@ -141,7 +141,11 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             delete rules[msg.data];
             return rules;
         }).then(() => storageChange('savedRules', savedRules => {
-            savedRules[msg.data] = r;
+            if (Object.keys(r).length === 0) {
+                delete savedRules[msg.data];
+            } else {
+                savedRules[msg.data] = r;
+            }
             return savedRules;
         }));
     } else if (msg.type === 'securitypolicyviolation') {
