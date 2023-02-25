@@ -58,11 +58,13 @@ var setRule = function(context, hostname, type, rule) {
     });
 };
 
-var restrictRules = function(rules, context) {
-    var restricted = {};
-    restricted['*'] = rules['*'] || {};
-    restricted[context] = rules[context] || {};
-    return restricted;
+var getRules = function(context) {
+    return storageGet('rules').then(rules => {
+        var restricted = {};
+        restricted['*'] = rules['*'] || {};
+        restricted[context] = rules[context] || {};
+        return restricted;
+    });
 };
 
 var pushRequest = function(tabId, hostname, type) {
@@ -103,19 +105,20 @@ var getCurrentTab = function() {
 
 browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.type === 'get') {
-        return Promise.all([
-            getCurrentTab(),
-            storageGet('rules'),
-            storageGet('requests'),
-            storageGet('recording'),
-        ]).then(([tab, rules, requests, recording]) => {
+        return getCurrentTab().then(tab => {
             var context = getHostname(tab.url);
-            return {
-                context: context,
-                rules: restrictRules(rules, context),
-                requests: requests[tab.id] || {},
-                recording: recording,
-            };
+            return Promise.all([
+                getRules(context),
+                storageGet('requests'),
+                storageGet('recording'),
+            ]).then(([rules, requests, recording]) => {
+                return {
+                    context: context,
+                    rules: rules,
+                    requests: requests[tab.id] || {},
+                    recording: recording,
+                };
+            });
         });
     } else if (msg.type === 'setRule') {
         return setRule(
@@ -123,9 +126,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             msg.data.hostname,
             msg.data.type,
             msg.data.value,
-        ).then(() => storageGet('rules')).then(rules => {
-            return restrictRules(rules, msg.data.context);
-        });
+        ).then(() => getRules(msg.data.context));
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
@@ -155,7 +156,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 
     return Promise.all([
         pushRequest(details.tabId, hostname, type),
-        storageGet('rules'),
+        getRules(context),
     ]).then(([_, rules]) => {
         if (!shared.shouldAllow(rules, context, hostname, type)) {
             if (details.type === 'sub_frame') {
@@ -169,12 +170,11 @@ browser.webRequest.onBeforeRequest.addListener(details => {
 }, {urls: ['<all_urls>']}, ['blocking']);
 
 browser.webRequest.onHeadersReceived.addListener(function(details) {
+    var context = getHostname(details.url);
     return Promise.all([
-        storageGet('rules'),
+        getRules(context),
         storageGet('recording'),
     ]).then(([rules, recording]) => {
-        var context = getHostname(details.url);
-
         var csp = (type, value) => {
             var name = 'Content-Security-Policy';
             if (shared.shouldAllow(rules, context, 'inline', type)) {
