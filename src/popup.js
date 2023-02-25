@@ -6,6 +6,7 @@ var rules;
 
 var table = document.querySelector('table');
 var recording = document.querySelector('[name="recording"]')
+var commitButton = document.querySelector('[name="commit"]');
 
 var sendMessage = function(type, data) {
     return browser.runtime.sendMessage({type: type, data: data});
@@ -161,4 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 recording.addEventListener('change', event => {
     sendMessage('toggleRecording');
+});
+
+commitButton.addEventListener('click', event => {
+    sendMessage('commit', context);
 });

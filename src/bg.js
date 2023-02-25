@@ -133,6 +133,16 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             msg.data.type,
             msg.data.value,
         ).then(() => getRules(msg.data.context));
+    } else if (msg.type === 'commit') {
+        var r;
+        return storageChange('rules', rules => {
+            r = rules[msg.data];
+            delete rules[msg.data];
+            return rules;
+        }).then(() => storageChange('savedRules', savedRules => {
+            savedRules[msg.data] = r;
+            return savedRules;
+        }));
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
