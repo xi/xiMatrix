@@ -109,7 +109,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             storageGet('requests'),
             storageGet('recording'),
         ]).then(([tab, rules, requests, recording]) => {
-            var context = msg.data || getHostname(tab.url);
+            var context = getHostname(tab.url);
             return {
                 context: context,
                 rules: restrictRules(rules, context),

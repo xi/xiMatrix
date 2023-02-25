@@ -129,8 +129,8 @@ var createRow = function(hostname) {
     return tr;
 };
 
-var loadContext = function(c) {
-    sendMessage('get', c).then(data => {
+var loadContext = function() {
+    sendMessage('get').then(data => {
         context = data.context;
         requests = data.requests;
         rules = data.rules;
