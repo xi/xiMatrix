@@ -1,3 +1,11 @@
+# 0.5.0 (2023-05-03)
+
+-   add reset button
+-   flow-relative CSS
+-   settings: add labels
+-   add lang attribute in HTML
+
+
 # 0.4.0 (2023-02-25)
 
 -   allow to have temporary and permanent rules
