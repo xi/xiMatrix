@@ -17,12 +17,12 @@
 table {
 	background: var(--red-light);
 	border-spacing: 0;
-	margin-bottom: 0.2em;
+	margin-block-end: 0.2em;
 }
 th, td {
 	position: relative;
 	border: 1px solid #fff;
-	min-width: 2.4em;
+	min-inline-size: 2.4em;
 	line-height: 1.8;
 	text-align: center;
 	font-weight: normal;

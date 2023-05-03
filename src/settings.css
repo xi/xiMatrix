@@ -9,7 +9,7 @@ body {
 }
 
 form {
-	height: 100vh;
+	block-size: 100vb;
 	display: grid;
 	grid-template-rows: 1fr min-content;
 	grid-template-columns: 1fr 1fr;
@@ -18,12 +18,13 @@ form {
 }
 
 textarea {
-	width: 100%;
+	block-size: 100%;
 	resize: none;
 }
 
 button {
-	padding: 0.5em 2em;
+	padding-block: 0.5em;
+	padding-inline: 2em;
 	justify-self: end;
 	grid-column: 1 / 3;
 }
