@@ -148,6 +148,11 @@ browser.runtime.onMessage.addListener((msg, sender) => {
             }
             return savedRules;
         }));
+    } else if (msg.type === 'reset') {
+        return storageChange('rules', rules => {
+            delete rules[msg.data];
+            return rules;
+        });
     } else if (msg.type === 'securitypolicyviolation') {
         return pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
