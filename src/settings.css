@@ -17,6 +17,11 @@ form {
 	padding: 0.5em;
 }
 
+label {
+	display: flex;
+	flex-direction: column;
+}
+
 textarea {
 	block-size: 100%;
 	resize: none;
