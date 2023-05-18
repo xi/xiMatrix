@@ -198,6 +198,13 @@ browser.webRequest.onBeforeSendHeaders.addListener(details => {
                 return {cancel: true};
             }
         }
+
+        if (shared.shouldAllow(rules, context, hostname, 'cookie')) {
+            return {requestHeaders: details.requestHeaders};
+        } else {
+            var filtered = details.requestHeaders.filter(h => !isCookie(h));
+            return {requestHeaders: filtered};
+        }
     });
 }, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
