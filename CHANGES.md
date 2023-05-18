@@ -1,3 +1,8 @@
+# 0.6.0 (2023-05-18)
+
+-   allow to block cookies
+
+
 # 0.5.0 (2023-05-03)
 
 -   add reset button
