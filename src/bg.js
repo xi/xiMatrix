@@ -167,7 +167,7 @@ browser.webNavigation.onBeforeNavigate.addListener(details => {
     }
 });
 
-browser.webRequest.onBeforeRequest.addListener(details => {
+browser.webRequest.onBeforeSendHeaders.addListener(details => {
     var context = getHostname(details.documentUrl || details.url);
     if (details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
@@ -192,7 +192,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
             }
         }
     });
-}, {urls: ['<all_urls>']}, ['blocking']);
+}, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
 browser.webRequest.onHeadersReceived.addListener(details => {
     var context = getHostname(details.url);
