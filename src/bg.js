@@ -167,12 +167,8 @@ browser.webNavigation.onBeforeNavigate.addListener(details => {
     }
 });
 
-browser.webRequest.onBeforeRequest.addListener(details => {
-    if (details.type === 'main_frame') {
-        return;
-    }
-
-    var context = getHostname(details.documentUrl);
+browser.webRequest.onBeforeSendHeaders.addListener(details => {
+    var context = getHostname(details.documentUrl || details.url);
     if (details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url);
@@ -180,11 +176,21 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     var hostname = getHostname(details.url);
     var type = shared.TYPE_MAP[details.type] || 'other';
 
+    let isCookie = h => h.name.toLowerCase() === 'cookie';
+    var cookiePromise = Promise.resolve();
+    if (details.requestHeaders.some(isCookie)) {
+        cookiePromise = pushRequest(details.tabId, hostname, 'cookie');
+    }
+
     return Promise.all([
         pushRequest(details.tabId, hostname, type),
+        cookiePromise,
         getRules(context),
-    ]).then(([_, rules]) => {
-        if (!shared.shouldAllow(rules, context, hostname, type)) {
+    ]).then(([_, _2, rules]) => {
+        if (
+            details.type !== 'main_frame'
+            && !shared.shouldAllow(rules, context, hostname, type)
+        ) {
             if (details.type === 'sub_frame') {
                 // this can in turn be blocked by a local CSP
                 return {redirectUrl: 'data:,' + encodeURIComponent(details.url)};
@@ -192,10 +198,17 @@ browser.webRequest.onBeforeRequest.addListener(details => {
                 return {cancel: true};
             }
         }
-    });
-}, {urls: ['<all_urls>']}, ['blocking']);
 
-browser.webRequest.onHeadersReceived.addListener(function(details) {
+        if (shared.shouldAllow(rules, context, hostname, 'cookie')) {
+            return {requestHeaders: details.requestHeaders};
+        } else {
+            var filtered = details.requestHeaders.filter(h => !isCookie(h));
+            return {requestHeaders: filtered};
+        }
+    });
+}, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
+
+browser.webRequest.onHeadersReceived.addListener(details => {
     var context = getHostname(details.url);
     return Promise.all([
         getRules(context),
@@ -220,9 +233,7 @@ browser.webRequest.onHeadersReceived.addListener(function(details) {
         csp('script', "script-src 'self' *");
         csp('media', "img-src 'self' *");
 
-        return {
-            responseHeaders: details.responseHeaders,
-        };
+        return {responseHeaders: details.responseHeaders};
     });
 }, {
     urls: ['<all_urls>'],

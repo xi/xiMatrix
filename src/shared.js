@@ -1,6 +1,6 @@
 var shared = {};
 
-shared.TYPES = ['font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
+shared.TYPES = ['cookie', 'font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
 shared.TYPE_MAP = {
     'stylesheet': 'css',
     'font': 'font',
