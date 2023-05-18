@@ -195,7 +195,7 @@ browser.webRequest.onBeforeRequest.addListener(details => {
     });
 }, {urls: ['<all_urls>']}, ['blocking']);
 
-browser.webRequest.onHeadersReceived.addListener(function(details) {
+browser.webRequest.onHeadersReceived.addListener(details => {
     var context = getHostname(details.url);
     return Promise.all([
         getRules(context),
@@ -220,9 +220,7 @@ browser.webRequest.onHeadersReceived.addListener(function(details) {
         csp('script', "script-src 'self' *");
         csp('media', "img-src 'self' *");
 
-        return {
-            responseHeaders: details.responseHeaders,
-        };
+        return {responseHeaders: details.responseHeaders};
     });
 }, {
     urls: ['<all_urls>'],
