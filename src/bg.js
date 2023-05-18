@@ -168,11 +168,7 @@ browser.webNavigation.onBeforeNavigate.addListener(details => {
 });
 
 browser.webRequest.onBeforeRequest.addListener(details => {
-    if (details.type === 'main_frame') {
-        return;
-    }
-
-    var context = getHostname(details.documentUrl);
+    var context = getHostname(details.documentUrl || details.url);
     if (details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url);
@@ -184,7 +180,10 @@ browser.webRequest.onBeforeRequest.addListener(details => {
         pushRequest(details.tabId, hostname, type),
         getRules(context),
     ]).then(([_, rules]) => {
-        if (!shared.shouldAllow(rules, context, hostname, type)) {
+        if (
+            details.type !== 'main_frame'
+            && !shared.shouldAllow(rules, context, hostname, type)
+        ) {
             if (details.type === 'sub_frame') {
                 // this can in turn be blocked by a local CSP
                 return {redirectUrl: 'data:,' + encodeURIComponent(details.url)};
