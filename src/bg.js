@@ -176,17 +176,20 @@ browser.webRequest.onBeforeSendHeaders.addListener(details => {
     var hostname = getHostname(details.url);
     var type = shared.TYPE_MAP[details.type] || 'other';
 
-    let isCookie = h => h.name.toLowerCase() === 'cookie';
-    var cookiePromise = Promise.resolve();
-    if (details.requestHeaders.some(isCookie)) {
-        cookiePromise = pushRequest(details.tabId, hostname, 'cookie');
+    var promises = [
+        getRules(context),
+    ];
+
+    if (details.type !== 'main_frame') {
+        promises.push(pushRequest(details.tabId, hostname, type));
     }
 
-    return Promise.all([
-        pushRequest(details.tabId, hostname, type),
-        cookiePromise,
-        getRules(context),
-    ]).then(([_, _2, rules]) => {
+    var isCookie = h => h.name.toLowerCase() === 'cookie';
+    if (details.requestHeaders.some(isCookie)) {
+        promises.push(pushRequest(details.tabId, hostname, 'cookie'));
+    }
+
+    return Promise.all(promises).then(([rules, ...rest]) => {
         if (
             details.type !== 'main_frame'
             && !shared.shouldAllow(rules, context, hostname, type)
