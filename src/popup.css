@@ -3,7 +3,8 @@
 	--green-dark: #080;
 	--red-light: #f8d0d0;
 	--grey: #ccc;
-	--text-dark: #fff;
+	--text-on-light: #000;
+	--text-on-dark: #fff;
 }
 
 .toolbar {
@@ -16,6 +17,7 @@
 
 table {
 	background: var(--red-light);
+	color: var(--text-on-light);
 	border-spacing: 0;
 	margin-block-end: 0.2em;
 }
@@ -60,5 +62,11 @@ table input ~ span {
 	z-index: 1;
 }
 table input:checked ~ span {
-	color: var(--text-dark);
+	color: var(--text-on-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		color-scheme: dark;
+	}
 }
