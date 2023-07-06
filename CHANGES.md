@@ -1,3 +1,9 @@
+# 0.7.0 (2023-07-06)
+
+-   fix: do not count main request as "other"
+-   add dark mode
+
+
 # 0.6.0 (2023-05-18)
 
 -   allow to block cookies
