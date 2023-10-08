@@ -1,3 +1,8 @@
+# 0.7.1 (2023-10-08)
+
+-   Fix detection of inline scripts and CSS in firefox 115
+
+
 # 0.7.0 (2023-07-06)
 
 -   fix: do not count main request as "other"
