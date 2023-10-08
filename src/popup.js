@@ -5,7 +5,7 @@ var requests;
 var rules;
 
 var table = document.querySelector('table');
-var recording = document.querySelector('[name="recording"]')
+var recording = document.querySelector('[name="recording"]');
 var commitButton = document.querySelector('[name="commit"]');
 var resetButton = document.querySelector('[name="reset"]');
 

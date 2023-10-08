@@ -1,3 +1,5 @@
+/* global browser */
+
 var form = document.querySelector('form');
 var textarea1 = document.querySelector('textarea.rules');
 var textarea2 = document.querySelector('textarea.savedRules');
@@ -5,8 +7,8 @@ var textarea2 = document.querySelector('textarea.savedRules');
 browser.storage.local.get(['rules', 'savedRules']).then(data => {
 	var rules = data.rules || {};
 	var savedRules = data.savedRules || {};
-	textarea1.value = JSON.stringify(rules, null, 2)
-	textarea2.value = JSON.stringify(savedRules, null, 2)
+	textarea1.value = JSON.stringify(rules, null, 2);
+	textarea2.value = JSON.stringify(savedRules, null, 2);
 });
 
 form.addEventListener('submit', event => {
