@@ -1,4 +1,6 @@
-/* global browser shared */
+/* global browser */
+
+import * as shared from './shared.js';
 
 var lock = Promise.resolve();
 

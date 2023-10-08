@@ -1,7 +1,5 @@
-var shared = {};
-
-shared.TYPES = ['cookie', 'font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
-shared.TYPE_MAP = {
+export const TYPES = ['cookie', 'font', 'css', 'media', 'script', 'xhr', 'frame', 'other'];
+export const TYPE_MAP = {
     'stylesheet': 'css',
     'font': 'font',
     'image': 'media',
@@ -14,7 +12,7 @@ shared.TYPE_MAP = {
     'sub_frame': 'frame',
 };
 
-shared.shouldAllow = function(rules, context, hostname, type) {
+export var shouldAllow = function(rules, context, hostname, type) {
     var hostnames = ['*', hostname];
     var parts = hostname.split('.');
     while (parts.length > 2) {
