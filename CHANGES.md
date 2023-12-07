@@ -1,3 +1,9 @@
+# 0.8.0 (2023-12-08)
+
+-   Store requests to session storage instead of local storage
+-   Add experimental support for domain patterns
+
+
 # 0.7.1 (2023-10-08)
 
 -   Fix detection of inline scripts and CSS in firefox 115
