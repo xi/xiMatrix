@@ -171,7 +171,7 @@ browser.webNavigation.onBeforeNavigate.addListener(details => {
 
 browser.webRequest.onBeforeSendHeaders.addListener(details => {
     var context = getHostname(details.documentUrl || details.url);
-    if (details.frameAncestors.length) {
+    if (details.frameAncestors && details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url);
     }
