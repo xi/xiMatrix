@@ -10,6 +10,12 @@ var STORAGE_DEFAULTS = {
     'requests': {},
     'recording': true,
 };
+var STORAGE_AREAS = {
+    'rules': browser.storage.local,
+    'savedRules': browser.storage.local,
+    'requests': browser.storage.session,
+    'recording': browser.storage.local,
+};
 
 var getHostname = function(url) {
     var u = new URL(url);
@@ -17,7 +23,7 @@ var getHostname = function(url) {
 };
 
 var storageGet = function(key) {
-    return browser.storage.local.get(key).then(data => {
+    return STORAGE_AREAS[key].get(key).then(data => {
         return data[key] ?? STORAGE_DEFAULTS[key];
     });
 };
@@ -26,7 +32,7 @@ var _storageChange = function(key, fn) {
     return storageGet(key).then(oldValue => {
         var data = {};
         data[key] = fn(oldValue);
-        return browser.storage.local.set(data);
+        return STORAGE_AREAS[key].set(data);
     });
 };
 
@@ -244,3 +250,9 @@ browser.webRequest.onHeadersReceived.addListener(details => {
     urls: ['<all_urls>'],
     types: ['main_frame'],
 }, ['blocking', 'responseHeaders']);
+
+// migrations
+browser.runtime.onInstalled.addListener(() => {
+    // 0.8.0: store requests to session storage
+    lock = lock.then(() => browser.storage.local.remove('requests'));
+});
