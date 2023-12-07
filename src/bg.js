@@ -17,8 +17,20 @@ var STORAGE_AREAS = {
     'recording': browser.storage.local,
 };
 
-var getHostname = function(url) {
+var glob = function(s, pattern) {
+    var p = pattern.split('*');
+    return s.startsWith(p[0]) && s.endsWith(p.at(-1));
+};
+
+var getHostname = function(url, patterns) {
     var u = new URL(url);
+
+    for (var pattern of patterns) {
+        if (glob(u.hostname, pattern)) {
+            return pattern;
+        }
+    }
+
     return u.hostname;
 };
 
@@ -64,6 +76,11 @@ var setRule = async function(context, hostname, type, rule) {
         }
         return rules;
     });
+};
+
+var getPatterns = async function() {
+    var savedRules = await storageGet('savedRules');
+    return savedRules._patterns || [];
 };
 
 var getRules = async function(context) {
@@ -116,8 +133,11 @@ var getCurrentTab = async function() {
 
 browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type === 'get') {
-        const tab = await getCurrentTab();
-        const context = getHostname(tab.url);
+        const [tab, patterns] = await Promise.all([
+            getCurrentTab(),
+            getPatterns(),
+        ]);
+        const context = getHostname(tab.url, patterns);
         const [rules, requests, recording] = await Promise.all([
             getRules(context),
             storageGet('requests'),
@@ -172,12 +192,13 @@ browser.webNavigation.onBeforeNavigate.addListener(async details => {
 });
 
 browser.webRequest.onBeforeSendHeaders.addListener(async details => {
-    var context = getHostname(details.documentUrl || details.url);
+    var patterns = await getPatterns();
+    var context = getHostname(details.documentUrl || details.url, patterns);
     if (details.frameAncestors && details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
-        context = getHostname(details.frameAncestors[last].url);
+        context = getHostname(details.frameAncestors[last].url, patterns);
     }
-    var hostname = getHostname(details.url);
+    var hostname = getHostname(details.url, patterns);
     var type = shared.TYPE_MAP[details.type] || 'other';
 
     var promises = [
@@ -215,7 +236,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
 }, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
 browser.webRequest.onHeadersReceived.addListener(async details => {
-    var context = getHostname(details.url);
+    var patterns = await getPatterns();
+    var context = getHostname(details.url, patterns);
     var [rules, recording] = await Promise.all([
         getRules(context),
         storageGet('recording'),
