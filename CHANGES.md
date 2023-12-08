@@ -1,3 +1,8 @@
+# 0.9.0 (2023-12-09)
+
+-   Performance improvements
+
+
 # 0.8.0 (2023-12-08)
 
 -   Store requests to session storage instead of local storage
