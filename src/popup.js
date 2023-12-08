@@ -11,8 +11,8 @@ var recording = document.querySelector('[name="recording"]');
 var commitButton = document.querySelector('[name="commit"]');
 var resetButton = document.querySelector('[name="reset"]');
 
-var sendMessage = function(type, data) {
-    return browser.runtime.sendMessage({type: type, data: data});
+var sendMessage = async function(type, data) {
+    return await browser.runtime.sendMessage({type: type, data: data});
 };
 
 var getHostnames = function() {
@@ -77,18 +77,17 @@ var createCheckbox = function(hostname, type) {
     var c = (hostname === 'first-party') ? '*' : context;
     input.checked = (rules[c][hostname] || {})[type];
 
-    input.onchange = () => {
-        sendMessage('setRule', {
+    input.onchange = async () => {
+        var newRules = await sendMessage('setRule', {
             context: context,
             hostname: hostname,
             type: type,
             value: input.checked,
-        }).then(newRules => {
-            rules = newRules;
-            commitButton.disabled = !rules.dirty;
-            resetButton.disabled = !rules.dirty;
-            updateInherit(type);
         });
+        rules = newRules;
+        commitButton.disabled = !rules.dirty;
+        resetButton.disabled = !rules.dirty;
+        updateInherit(type);
     };
 
     return input;
@@ -135,49 +134,48 @@ var createRow = function(hostname) {
     return tr;
 };
 
-var loadContext = function() {
-    return sendMessage('get').then(data => {
-        context = data.context;
-        requests = data.requests;
-        rules = data.rules;
-        recording.checked = data.recording;
-        commitButton.disabled = !rules.dirty;
-        resetButton.disabled = !rules.dirty;
+var loadContext = async function() {
+    var data = await sendMessage('get');
+    context = data.context;
+    requests = data.requests;
+    rules = data.rules;
+    recording.checked = data.recording;
+    commitButton.disabled = !rules.dirty;
+    resetButton.disabled = !rules.dirty;
 
-        table.innerHTML = '';
-        table.append(createHeader());
-        table.append(createRow('inline'));
-        table.append(createRow('first-party'));
+    table.innerHTML = '';
+    table.append(createHeader());
+    table.append(createRow('inline'));
+    table.append(createRow('first-party'));
 
-        for (const hostname of getHostnames()) {
-            table.append(createRow(hostname));
-        }
+    for (const hostname of getHostnames()) {
+        table.append(createRow(hostname));
+    }
 
-        updateInherit('*');
-    });
+    updateInherit('*');
 };
 
 browser.webNavigation.onBeforeNavigate.addListener(window.close);
 
-document.querySelector('[name="settings"]').addEventListener('click', event => {
+document.querySelector('[name="settings"]').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadContext();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadContext();
 });
 
-recording.addEventListener('change', event => {
-    sendMessage('toggleRecording');
+recording.addEventListener('change', async () => {
+    await sendMessage('toggleRecording');
 });
 
-commitButton.addEventListener('click', event => {
-    sendMessage('commit', context).then(() => {
-        commitButton.disabled = true;
-        resetButton.disabled = true;
-    });
+commitButton.addEventListener('click', async () => {
+    await sendMessage('commit', context);
+    commitButton.disabled = true;
+    resetButton.disabled = true;
 });
 
-resetButton.addEventListener('click', event => {
-    sendMessage('reset', context).then(loadContext);
+resetButton.addEventListener('click', async () => {
+    await sendMessage('reset', context);
+    await loadContext();
 });
