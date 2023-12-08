@@ -1,21 +1,7 @@
 /* global browser */
 
 import * as shared from './shared.js';
-
-var lock = Promise.resolve();
-
-var STORAGE_DEFAULTS = {
-    'rules': {},
-    'savedRules': {},
-    'requests': {},
-    'recording': true,
-};
-var STORAGE_AREAS = {
-    'rules': browser.storage.local,
-    'savedRules': browser.storage.local,
-    'requests': browser.storage.session,
-    'recording': browser.storage.local,
-};
+import * as storage from './storage.js';
 
 var glob = function(s, pattern) {
     var p = pattern.split('*');
@@ -34,26 +20,9 @@ var getHostname = function(url, patterns) {
     return u.hostname;
 };
 
-var storageGet = async function(key) {
-    var data = await STORAGE_AREAS[key].get(key);
-    return data[key] ?? STORAGE_DEFAULTS[key];
-};
-
-var _storageChange = async function(key, fn) {
-    var oldValue = await storageGet(key);
-    var data = {};
-    data[key] = fn(oldValue);
-    await STORAGE_AREAS[key].set(data);
-};
-
-var storageChange = async function(key, fn) {
-    lock = lock.then(() => _storageChange(key, fn));
-    await lock;
-};
-
 var setRule = async function(context, hostname, type, rule) {
-    var savedRules = await storageGet('savedRules');
-    await storageChange('rules', rules => {
+    var savedRules = await storage.get('savedRules');
+    await storage.change('rules', rules => {
         if (hostname === 'first-party') {
             context = '*';
         }
@@ -79,14 +48,14 @@ var setRule = async function(context, hostname, type, rule) {
 };
 
 var getPatterns = async function() {
-    var savedRules = await storageGet('savedRules');
+    var savedRules = await storage.get('savedRules');
     return savedRules._patterns || [];
 };
 
 var getRules = async function(context) {
     var [rules, savedRules] = await Promise.all([
-        storageGet('rules'),
-        storageGet('savedRules'),
+        storage.get('rules'),
+        storage.get('savedRules'),
     ]);
     var restricted = {};
     restricted['*'] = rules['*'] || savedRules['*'] || {};
@@ -96,9 +65,9 @@ var getRules = async function(context) {
 };
 
 var pushRequest = async function(tabId, hostname, type) {
-    var recording = await storageGet('recording');
+    var recording = await storage.get('recording');
     if (recording) {
-        await storageChange('requests', requests => {
+        await storage.change('requests', requests => {
             if (!requests[tabId]) {
                 requests[tabId] = {};
             }
@@ -115,7 +84,7 @@ var pushRequest = async function(tabId, hostname, type) {
 };
 
 var clearRequests = async function(tabId) {
-    await storageChange('requests', requests => {
+    await storage.change('requests', requests => {
         if (requests[tabId]) {
             delete requests[tabId];
         }
@@ -140,8 +109,8 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const context = getHostname(tab.url, patterns);
         const [rules, requests, recording] = await Promise.all([
             getRules(context),
-            storageGet('requests'),
-            storageGet('recording'),
+            storage.get('requests'),
+            storage.get('recording'),
         ]);
         return {
             context: context,
@@ -159,12 +128,12 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         return await getRules(msg.data.context);
     } else if (msg.type === 'commit') {
         let r;
-        await storageChange('rules', rules => {
+        await storage.change('rules', rules => {
             r = rules[msg.data];
             delete rules[msg.data];
             return rules;
         });
-        await storageChange('savedRules', savedRules => {
+        await storage.change('savedRules', savedRules => {
             if (Object.keys(r).length === 0) {
                 delete savedRules[msg.data];
             } else {
@@ -173,14 +142,14 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             return savedRules;
         });
     } else if (msg.type === 'reset') {
-        await storageChange('rules', rules => {
+        await storage.change('rules', rules => {
             delete rules[msg.data];
             return rules;
         });
     } else if (msg.type === 'securitypolicyviolation') {
         await pushRequest(sender.tab.id, 'inline', msg.data);
     } else if (msg.type === 'toggleRecording') {
-        await storageChange('recording', recording => !recording);
+        await storage.change('recording', recording => !recording);
     }
 });
 
@@ -240,7 +209,7 @@ browser.webRequest.onHeadersReceived.addListener(async details => {
     var context = getHostname(details.url, patterns);
     var [rules, recording] = await Promise.all([
         getRules(context),
-        storageGet('recording'),
+        storage.get('recording'),
     ]);
     var csp = (type, value) => {
         var name = 'Content-Security-Policy';
@@ -266,9 +235,3 @@ browser.webRequest.onHeadersReceived.addListener(async details => {
     urls: ['<all_urls>'],
     types: ['main_frame'],
 }, ['blocking', 'responseHeaders']);
-
-// migrations
-browser.runtime.onInstalled.addListener(() => {
-    // 0.8.0: store requests to session storage
-    lock = lock.then(() => browser.storage.local.remove('requests'));
-});
