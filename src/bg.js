@@ -183,7 +183,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
         promises.push(pushRequest(details.tabId, hostname, 'cookie'));
     }
 
-    var [rules, ...rest] = await Promise.all(promises);
+    var [rules, ..._rest] = await Promise.all(promises);
     if (
         details.type !== 'main_frame'
         && !shared.shouldAllow(rules, context, hostname, type)
