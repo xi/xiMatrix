@@ -5,6 +5,8 @@ This extension is heavily inspired by
 all web requests as well as inline code are blocked. You can then define rules
 to allow only those requests you want. Definitely for advanced users.
 
+Available for Firefox here: https://addons.mozilla.org/firefox/addon/ximatrix/
+
 ![screenshot](screenshot.png)
 
 ## Differences to uMatrix
