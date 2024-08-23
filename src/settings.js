@@ -11,6 +11,16 @@ browser.storage.local.get(['rules', 'savedRules']).then(data => {
     textarea2.value = JSON.stringify(savedRules, null, 2);
 });
 
+form.addEventListener('change', event => {
+    try {
+        JSON.parse(event.target.value);
+        event.target.setCustomValidity('');
+    } catch (e) {
+        event.target.setCustomValidity(e);
+        event.target.reportValidity();
+    }
+});
+
 form.addEventListener('submit', event => {
     event.preventDefault();
     var rules = JSON.parse(textarea1.value);
