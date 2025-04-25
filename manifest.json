@@ -1,11 +1,11 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "xiMatrix",
   "author": "Tobias Bengfort",
   "homepage_url": "https://github.com/xi/xiMatrix",
   "description": "block requests based on domain and type",
   "version": "0.9.0",
-  "browser_action": {
+  "action": {
     "default_title": "xiMatrix",
     "default_popup": "src/popup.html"
   },
@@ -15,7 +15,6 @@
   },
   "background": {
     "scripts": ["src/bg.js"],
-    "persistent": false,
     "type": "module"
   },
   "content_scripts": [{
@@ -32,7 +31,9 @@
     "tabs",
     "webNavigation",
     "webRequest",
-    "webRequestBlocking",
+    "webRequestBlocking"
+  ],
+  "host_permissions": [
     "<all_urls>"
   ],
   "browser_specific_settings": {
