@@ -7,11 +7,11 @@
   "version": "0.9.0",
   "browser_action": {
     "default_title": "xiMatrix",
-    "default_popup": "src/popup.html",
-    "default_icon": "icon.svg"
+    "default_popup": "src/popup.html"
   },
   "icons": {
-    "48": "icon.svg"
+    "32": "icon.svg",
+    "64": "icon.svg"
   },
   "background": {
     "scripts": ["src/bg.js"],
