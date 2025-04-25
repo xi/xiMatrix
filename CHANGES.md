@@ -1,3 +1,9 @@
+# 0.10.0 (2025-04-25)
+
+-   update to manifest v3
+-   client side JSON validation for rules
+
+
 # 0.9.0 (2023-12-09)
 
 -   Performance improvements
