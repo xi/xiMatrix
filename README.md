@@ -29,7 +29,6 @@ Available for Firefox here: https://addons.mozilla.org/firefox/addon/ximatrix/
 			detail.
 	-	the popup is not updated while it is open. You have to close and open it
 		again to refresh the data.
-	-	the icon does not show the amount of blocked requests
 	-	blocked images are not replaced by a placeholder
 
 ## Known issues

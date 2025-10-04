@@ -64,7 +64,18 @@ var getRules = async function(context) {
     return restricted;
 };
 
-var pushRequest = async function(tabId, hostname, type) {
+var increaseTotals = async function(tabId) {
+    var value = 0;
+    await storage.change('totals', totals => {
+        value = (totals[tabId] || 0) + 1;
+        totals[tabId] = value;
+        return totals;
+    });
+    await browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId});
+    await browser.action.setBadgeText({text: '' + value, tabId: tabId});
+};
+
+var pushRequest = async function(tabId, hostname, type, allowed) {
     await storage.change('requests', requests => {
         if (!requests[tabId]) {
             requests[tabId] = {};
@@ -78,15 +89,26 @@ var pushRequest = async function(tabId, hostname, type) {
         requests[tabId][hostname][type] += 1;
         return requests;
     });
+    if (!allowed) {
+        await increaseTotals(tabId);
+    }
 };
 
 var clearRequests = async function(tabId) {
-    await storage.change('requests', requests => {
-        if (requests[tabId]) {
-            delete requests[tabId];
-        }
-        return requests;
-    });
+    await Promise.all([
+        storage.change('requests', requests => {
+            if (requests[tabId]) {
+                delete requests[tabId];
+            }
+            return requests;
+        }),
+        storage.change('totals', totals => {
+            if (totals[tabId]) {
+                delete totals[tabId];
+            }
+            return totals;
+        }),
+    ]);
 };
 
 var getCurrentTab = async function() {
@@ -142,7 +164,11 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             return rules;
         });
     } else if (msg.type === 'securitypolicyviolation') {
-        await pushRequest(sender.tab.id, 'inline', msg.data);
+        var patterns = await getPatterns();
+        var context = getHostname(sender.tab.url, patterns);
+        var rules = await getRules(context);
+        var allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
+        await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     }
 });
 
@@ -163,20 +189,19 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     var hostname = getHostname(details.url, patterns);
     var type = shared.TYPE_MAP[details.type] || 'other';
 
-    var promises = [
-        getRules(context),
-    ];
+    var rules = await getRules(context);
 
     if (details.type !== 'main_frame') {
-        promises.push(pushRequest(details.tabId, hostname, type));
+        var allowed = shared.shouldAllow(rules, context, hostname, type);
+        await pushRequest(details.tabId, hostname, type, allowed);
     }
 
     var isCookie = h => h.name.toLowerCase() === 'cookie';
     if (details.requestHeaders.some(isCookie)) {
-        promises.push(pushRequest(details.tabId, hostname, 'cookie'));
+        var allowed = shared.shouldAllow(rules, context, hostname, 'cookie');
+        await pushRequest(details.tabId, hostname, 'cookie', allowed);
     }
 
-    var [rules, ..._rest] = await Promise.all(promises);
     if (
         details.type !== 'main_frame'
         && !shared.shouldAllow(rules, context, hostname, type)
