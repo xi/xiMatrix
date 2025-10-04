@@ -1,12 +1,13 @@
-/* global browser */
+import * as storage from './storage.js';
 
 var form = document.querySelector('form');
 var textarea1 = document.querySelector('textarea.rules');
 var textarea2 = document.querySelector('textarea.savedRules');
 
-browser.storage.local.get(['rules', 'savedRules']).then(data => {
-    var rules = data.rules || {};
-    var savedRules = data.savedRules || {};
+Promise.all([
+    storage.get('rules'),
+    storage.get('savedRules'),
+]).then(([rules, savedRules]) => {
     textarea1.value = JSON.stringify(rules, null, 2);
     textarea2.value = JSON.stringify(savedRules, null, 2);
 });
@@ -21,14 +22,12 @@ form.addEventListener('change', event => {
     }
 });
 
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
     event.preventDefault();
-    var rules = JSON.parse(textarea1.value);
-    var savedRules = JSON.parse(textarea2.value);
-    browser.storage.local.set({
-        'rules': rules,
-        'savedRules': savedRules,
-    }).then(() => {
-        location.reload();
+    await storage.change('rules', () => {
+        return JSON.parse(textarea1.value);
+    });
+    await storage.change('savedRules', () => {
+        return JSON.parse(textarea2.value);
     });
 });

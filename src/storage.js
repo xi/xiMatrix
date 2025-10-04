@@ -10,7 +10,6 @@ var STORAGE_AREAS = {
     'savedRules': browser.storage.local,
     'requests': browser.storage.session,
 };
-
 var lock = Promise.resolve();
 var cache = {};
 
@@ -30,7 +29,7 @@ var _change = async function(key, fn) {
     var oldValue = await get(key);
     var data = {};
     data[key] = fn(oldValue);
-    delete cache[key];
+    cache[key] = data[key];
     await STORAGE_AREAS[key].set(data);
 };
 
@@ -38,11 +37,3 @@ export var change = async function(key, fn) {
     lock = lock.then(() => _change(key, fn));
     await lock;
 };
-
-var invalidateCache = function(changes) {
-  for (var key in changes) {
-    delete cache[key];
-  }
-};
-
-browser.storage.local.onChanged.addListener(invalidateCache);
