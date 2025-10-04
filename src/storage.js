@@ -46,9 +46,3 @@ var invalidateCache = function(changes) {
 };
 
 browser.storage.local.onChanged.addListener(invalidateCache);
-
-// migrations
-browser.runtime.onInstalled.addListener(() => {
-    // 0.8.0: store requests to session storage
-    lock = lock.then(() => browser.storage.local.remove('requests'));
-});
