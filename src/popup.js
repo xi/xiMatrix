@@ -6,15 +6,15 @@ var context;
 var requests;
 var rules;
 
-var table = document.querySelector('table');
-var commitButton = document.querySelector('[name="commit"]');
-var resetButton = document.querySelector('[name="reset"]');
+const table = document.querySelector('table');
+const commitButton = document.querySelector('[name="commit"]');
+const resetButton = document.querySelector('[name="reset"]');
 
-var sendMessage = async function(type, data) {
+const sendMessage = async function(type, data) {
     return await browser.runtime.sendMessage({type: type, data: data});
 };
 
-var getHostnames = function() {
+const getHostnames = function() {
     var hostnames = [];
 
     var addSubdomains = function(h) {
@@ -52,7 +52,7 @@ var getHostnames = function() {
     return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
 };
 
-var updateInherit = function(type) {
+const updateInherit = function(type) {
     var selector = 'input';
     if (type !== '*') {
         selector += `[data-type="${type}"]`;
@@ -67,7 +67,7 @@ var updateInherit = function(type) {
     });
 };
 
-var createCheckbox = function(hostname, type) {
+const createCheckbox = function(hostname, type) {
     var input = document.createElement('input');
     input.type = 'checkbox';
     input.dataset.hostname = hostname;
@@ -92,7 +92,7 @@ var createCheckbox = function(hostname, type) {
     return input;
 };
 
-var createCell = function(tag, hostname, type, text) {
+const createCell = function(tag, hostname, type, text) {
     const cell = document.createElement(tag);
     cell.append(createCheckbox(hostname, type));
 
@@ -103,7 +103,7 @@ var createCell = function(tag, hostname, type, text) {
     return cell;
 };
 
-var createHeader = function() {
+const createHeader = function() {
     var tr = document.createElement('tr');
 
     var th = document.createElement('th');
@@ -116,7 +116,7 @@ var createHeader = function() {
     return tr;
 };
 
-var createRow = function(hostname) {
+const createRow = function(hostname) {
     var tr = document.createElement('tr');
     tr.append(createCell('th', hostname, '*', hostname));
     for (const type of shared.TYPES) {
@@ -133,7 +133,7 @@ var createRow = function(hostname) {
     return tr;
 };
 
-var loadContext = async function() {
+const loadContext = async function() {
     var data = await sendMessage('get');
     context = data.context;
     requests = data.requests;

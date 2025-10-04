@@ -3,12 +3,12 @@
 import * as shared from './shared.js';
 import * as storage from './storage.js';
 
-var glob = function(s, pattern) {
+const glob = function(s, pattern) {
     var p = pattern.split('*');
     return s.startsWith(p[0]) && s.endsWith(p.at(-1));
 };
 
-var getHostname = function(url, patterns) {
+const getHostname = function(url, patterns) {
     var u = new URL(url);
 
     for (var pattern of patterns) {
@@ -20,7 +20,7 @@ var getHostname = function(url, patterns) {
     return u.hostname;
 };
 
-var setRule = async function(context, hostname, type, rule) {
+const setRule = async function(context, hostname, type, rule) {
     var savedRules = await storage.get('savedRules');
     await storage.change('rules', rules => {
         if (hostname === 'first-party') {
@@ -47,12 +47,12 @@ var setRule = async function(context, hostname, type, rule) {
     });
 };
 
-var getPatterns = async function() {
+const getPatterns = async function() {
     var savedRules = await storage.get('savedRules');
     return savedRules._patterns || [];
 };
 
-var getRules = async function(context) {
+const getRules = async function(context) {
     var [rules, savedRules] = await Promise.all([
         storage.get('rules'),
         storage.get('savedRules'),
@@ -64,7 +64,7 @@ var getRules = async function(context) {
     return restricted;
 };
 
-var increaseTotals = async function(tabId) {
+const increaseTotals = async function(tabId) {
     var value = 0;
     await storage.change('totals', totals => {
         value = (totals[tabId] || 0) + 1;
@@ -75,7 +75,7 @@ var increaseTotals = async function(tabId) {
     await browser.action.setBadgeText({text: '' + value, tabId: tabId});
 };
 
-var pushRequest = async function(tabId, hostname, type, allowed) {
+const pushRequest = async function(tabId, hostname, type, allowed) {
     await storage.change('requests', requests => {
         if (!requests[tabId]) {
             requests[tabId] = {};
@@ -94,7 +94,7 @@ var pushRequest = async function(tabId, hostname, type, allowed) {
     }
 };
 
-var clearRequests = async function(tabId) {
+const clearRequests = async function(tabId) {
     await Promise.all([
         storage.change('requests', requests => {
             if (requests[tabId]) {
@@ -111,7 +111,7 @@ var clearRequests = async function(tabId) {
     ]);
 };
 
-var getCurrentTab = async function() {
+const getCurrentTab = async function() {
     var tabs = await browser.tabs.query({
         active: true,
         currentWindow: true,
@@ -192,13 +192,13 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     var rules = await getRules(context);
 
     if (details.type !== 'main_frame') {
-        var allowed = shared.shouldAllow(rules, context, hostname, type);
+        const allowed = shared.shouldAllow(rules, context, hostname, type);
         await pushRequest(details.tabId, hostname, type, allowed);
     }
 
     var isCookie = h => h.name.toLowerCase() === 'cookie';
     if (details.requestHeaders.some(isCookie)) {
-        var allowed = shared.shouldAllow(rules, context, hostname, 'cookie');
+        const allowed = shared.shouldAllow(rules, context, hostname, 'cookie');
         await pushRequest(details.tabId, hostname, 'cookie', allowed);
     }
 

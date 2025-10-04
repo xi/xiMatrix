@@ -1,8 +1,8 @@
 import * as storage from './storage.js';
 
-var form = document.querySelector('form');
-var textarea1 = document.querySelector('textarea.rules');
-var textarea2 = document.querySelector('textarea.savedRules');
+const form = document.querySelector('form');
+const textarea1 = document.querySelector('textarea.rules');
+const textarea2 = document.querySelector('textarea.savedRules');
 
 Promise.all([
     storage.get('rules'),
