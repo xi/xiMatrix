@@ -153,7 +153,11 @@ const loadContext = async function() {
     updateInherit('*');
 };
 
-browser.webNavigation.onBeforeNavigate.addListener(window.close);
+browser.webNavigation.onBeforeNavigate.addListener(details => {
+    if (details.parentFrameId === -1) {
+        window.close();
+    }
+});
 
 document.querySelector('[name="settings"]').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
