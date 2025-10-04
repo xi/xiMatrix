@@ -1,3 +1,10 @@
+# 0.11.0 (2025-10-04)
+
+-   only close popup on toplevel navigation
+-   display number of blocked requests in badge
+-   remove the option to disable recording
+
+
 # 0.10.0 (2025-04-25)
 
 -   update to manifest v3
