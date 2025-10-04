@@ -4,13 +4,11 @@ var STORAGE_DEFAULTS = {
     'rules': {},
     'savedRules': {},
     'requests': {},
-    'recording': true,
 };
 var STORAGE_AREAS = {
     'rules': browser.storage.local,
     'savedRules': browser.storage.local,
     'requests': browser.storage.session,
-    'recording': browser.storage.local,
 };
 
 var lock = Promise.resolve();

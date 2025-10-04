@@ -65,22 +65,19 @@ var getRules = async function(context) {
 };
 
 var pushRequest = async function(tabId, hostname, type) {
-    var recording = await storage.get('recording');
-    if (recording) {
-        await storage.change('requests', requests => {
-            if (!requests[tabId]) {
-                requests[tabId] = {};
-            }
-            if (!requests[tabId][hostname]) {
-                requests[tabId][hostname] = {};
-            }
-            if (!requests[tabId][hostname][type]) {
-                requests[tabId][hostname][type] = 0;
-            }
-            requests[tabId][hostname][type] += 1;
-            return requests;
-        });
-    }
+    await storage.change('requests', requests => {
+        if (!requests[tabId]) {
+            requests[tabId] = {};
+        }
+        if (!requests[tabId][hostname]) {
+            requests[tabId][hostname] = {};
+        }
+        if (!requests[tabId][hostname][type]) {
+            requests[tabId][hostname][type] = 0;
+        }
+        requests[tabId][hostname][type] += 1;
+        return requests;
+    });
 };
 
 var clearRequests = async function(tabId) {
@@ -107,16 +104,14 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             getPatterns(),
         ]);
         const context = getHostname(tab.url, patterns);
-        const [rules, requests, recording] = await Promise.all([
+        const [rules, requests] = await Promise.all([
             getRules(context),
             storage.get('requests'),
-            storage.get('recording'),
         ]);
         return {
             context: context,
             rules: rules,
             requests: requests[tab.id] || {},
-            recording: recording,
         };
     } else if (msg.type === 'setRule') {
         await setRule(
@@ -148,8 +143,6 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         });
     } else if (msg.type === 'securitypolicyviolation') {
         await pushRequest(sender.tab.id, 'inline', msg.data);
-    } else if (msg.type === 'toggleRecording') {
-        await storage.change('recording', recording => !recording);
     }
 });
 
@@ -207,18 +200,11 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
 browser.webRequest.onHeadersReceived.addListener(async details => {
     var patterns = await getPatterns();
     var context = getHostname(details.url, patterns);
-    var [rules, recording] = await Promise.all([
-        getRules(context),
-        storage.get('recording'),
-    ]);
+    var rules = await getRules(context);
     var csp = (type, value) => {
         var name = 'Content-Security-Policy';
         if (shared.shouldAllow(rules, context, 'inline', type)) {
-            if (recording) {
-                name = 'Content-Security-Policy-Report-Only';
-            } else {
-                return;
-            }
+            name = 'Content-Security-Policy-Report-Only';
         }
         details.responseHeaders.push({
             name: name,

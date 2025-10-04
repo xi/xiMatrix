@@ -10,9 +10,7 @@
 .toolbar {
 	display: flex;
 	gap: 0.5em;
-}
-.toolbar label {
-	flex-grow: 1;
+	justify-content: end;
 }
 
 table {

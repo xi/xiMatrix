@@ -16,7 +16,6 @@ Available for Firefox here: https://addons.mozilla.org/firefox/addon/ximatrix/
 	-	keyboard navigation
 	-	simpler code
 	-	rules are encoded as JSON
-	-	recording requests can be disabled to improve performance
 	-	it is possible to control inline scripts, styles, and images
 	-	there is a separate column for fonts
 -	disadvantages / simplifications

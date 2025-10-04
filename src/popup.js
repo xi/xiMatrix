@@ -7,7 +7,6 @@ var requests;
 var rules;
 
 var table = document.querySelector('table');
-var recording = document.querySelector('[name="recording"]');
 var commitButton = document.querySelector('[name="commit"]');
 var resetButton = document.querySelector('[name="reset"]');
 
@@ -139,7 +138,6 @@ var loadContext = async function() {
     context = data.context;
     requests = data.requests;
     rules = data.rules;
-    recording.checked = data.recording;
     commitButton.disabled = !rules.dirty;
     resetButton.disabled = !rules.dirty;
 
@@ -163,10 +161,6 @@ document.querySelector('[name="settings"]').addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadContext();
-});
-
-recording.addEventListener('change', async () => {
-    await sendMessage('toggleRecording');
 });
 
 commitButton.addEventListener('click', async () => {
