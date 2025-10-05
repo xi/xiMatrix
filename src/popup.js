@@ -154,7 +154,7 @@ const loadContext = async function() {
 };
 
 browser.webNavigation.onBeforeNavigate.addListener(details => {
-    if (details.parentFrameId === -1) {
+    if (details.frameId === 0) {
         window.close();
     }
 });
