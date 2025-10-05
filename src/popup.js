@@ -9,6 +9,11 @@ var rules;
 const table = document.querySelector('table');
 const commitButton = document.querySelector('[name="commit"]');
 const resetButton = document.querySelector('[name="reset"]');
+const permissionsButton = document.querySelector('[name="permissions"]');
+
+const permissions = {
+    origins: ['<all_urls>'],
+};
 
 const sendMessage = async function(type, data) {
     return await browser.runtime.sendMessage({type: type, data: data});
@@ -164,7 +169,12 @@ document.querySelector('[name="settings"]').addEventListener('click', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadContext();
+    var hasPermissions = await browser.permissions.contains(permissions);
+    if (hasPermissions) {
+        await loadContext();
+    } else {
+        permissionsButton.hidden = false;
+    }
 });
 
 commitButton.addEventListener('click', async () => {
@@ -176,4 +186,9 @@ commitButton.addEventListener('click', async () => {
 resetButton.addEventListener('click', async () => {
     await sendMessage('reset', context);
     await loadContext();
+});
+
+permissionsButton.addEventListener('click', async () => {
+    await browser.permissions.request(permissions);
+    window.close();
 });
