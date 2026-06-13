@@ -20,11 +20,11 @@ const _get = async function(key) {
     return data[key] ?? STORAGE_DEFAULTS[key];
 };
 
-export const get = function(key) {
+export const get = async function(key) {
     if (!cache[key]) {
         cache[key] = _get(key);
     }
-    return cache[key];
+    return await cache[key];
 };
 
 const _change = async function(key, fn) {
