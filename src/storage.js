@@ -24,9 +24,7 @@ export const get = async function(key) {
 const _change = async function(key, mut) {
     var value = await get(key);
     mut(value);
-    var data = {};
-    data[key] = value;
-    await STORAGE_AREAS[key].set(data);
+    await STORAGE_AREAS[key].set({[key]: value});
 };
 
 export const change = async function(key, fn) {
