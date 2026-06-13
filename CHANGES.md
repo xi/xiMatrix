@@ -1,3 +1,8 @@
+# 0.11.2 (2026-06-13)
+
+-   fix reset when no unsaved rules exist
+
+
 # 0.11.1 (2025-10-05)
 
 -   prompt for host permissions when not available
