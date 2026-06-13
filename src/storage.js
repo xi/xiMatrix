@@ -21,11 +21,11 @@ export const get = async function(key) {
     return await cache[key];
 };
 
-const _change = async function(key, fn) {
-    var oldValue = await get(key);
+const _change = async function(key, mut) {
+    var value = await get(key);
+    mut(value);
     var data = {};
-    data[key] = fn(oldValue);
-    cache[key] = data[key];
+    data[key] = value;
     await STORAGE_AREAS[key].set(data);
 };
 

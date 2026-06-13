@@ -43,7 +43,6 @@ const setRule = async function(context, hostname, type, allow) {
                 delete rules[context];
             }
         }
-        return rules;
     });
 };
 
@@ -69,7 +68,6 @@ const increaseTotals = async function(tabId) {
     await storage.change('totals', totals => {
         value = (totals[tabId] || 0) + 1;
         totals[tabId] = value;
-        return totals;
     });
     await browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId});
     await browser.action.setBadgeText({text: '' + value, tabId: tabId});
@@ -87,7 +85,6 @@ const pushRequest = async function(tabId, hostname, type, allowed) {
             requests[tabId][hostname][type] = 0;
         }
         requests[tabId][hostname][type] += 1;
-        return requests;
     });
     if (!allowed) {
         await increaseTotals(tabId);
@@ -100,13 +97,11 @@ const clearRequests = async function(tabId) {
             if (requests[tabId]) {
                 delete requests[tabId];
             }
-            return requests;
         }),
         storage.change('totals', totals => {
             if (totals[tabId]) {
                 delete totals[tabId];
             }
-            return totals;
         }),
     ]);
 };
@@ -148,7 +143,6 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         await storage.change('rules', rules => {
             r = rules[msg.data];
             delete rules[msg.data];
-            return rules;
         });
         await storage.change('savedRules', savedRules => {
             if (Object.keys(r).length === 0) {
@@ -156,12 +150,10 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             } else {
                 savedRules[msg.data] = r;
             }
-            return savedRules;
         });
     } else if (msg.type === 'reset') {
         await storage.change('rules', rules => {
             delete rules[msg.data];
-            return rules;
         });
     } else if (msg.type === 'securitypolicyviolation') {
         var patterns = await getPatterns();
