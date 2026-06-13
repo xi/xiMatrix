@@ -27,7 +27,7 @@ const setRule = async function(context, hostname, type, allow) {
             context = '*';
         }
         if (!rules[context]) {
-            rules[context] = savedRules[context] || {};
+            rules[context] = structuredClone(savedRules[context]) || {};
         }
         if (!rules[context][hostname]) {
             rules[context][hostname] = {};
@@ -148,7 +148,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             if (Object.keys(r).length === 0) {
                 delete savedRules[msg.data];
             } else {
-                savedRules[msg.data] = r;
+                savedRules[msg.data] = structuredClone(r);
             }
         });
     } else if (msg.type === 'reset') {
