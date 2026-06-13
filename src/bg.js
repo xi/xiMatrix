@@ -20,7 +20,7 @@ const getHostname = function(url, patterns) {
     return u.hostname;
 };
 
-const setRule = async function(context, hostname, type, rule) {
+const setRule = async function(context, hostname, type, allow) {
     var savedRules = await storage.get('savedRules');
     await storage.change('rules', rules => {
         if (hostname === 'first-party') {
@@ -32,8 +32,8 @@ const setRule = async function(context, hostname, type, rule) {
         if (!rules[context][hostname]) {
             rules[context][hostname] = {};
         }
-        if (rule) {
-            rules[context][hostname][type] = rule;
+        if (allow) {
+            rules[context][hostname][type] = allow;
         } else {
             delete rules[context][hostname][type];
             if (Object.keys(rules[context][hostname]).length === 0) {
@@ -140,7 +140,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             msg.data.context,
             msg.data.hostname,
             msg.data.type,
-            msg.data.value,
+            msg.data.allow,
         );
         return await getRules(msg.data.context);
     } else if (msg.type === 'commit') {

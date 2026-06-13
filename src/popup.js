@@ -86,7 +86,7 @@ const createCheckbox = function(hostname, type) {
             context: context,
             hostname: hostname,
             type: type,
-            value: input.checked,
+            allow: input.checked,
         });
         rules = newRules;
         commitButton.disabled = !rules.dirty;
