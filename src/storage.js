@@ -1,11 +1,5 @@
 /* global browser */
 
-const STORAGE_DEFAULTS = {
-    'rules': {},
-    'savedRules': {},
-    'requests': {},
-    'totals': {},
-};
 const STORAGE_AREAS = {
     'rules': browser.storage.local,
     'savedRules': browser.storage.local,
@@ -17,7 +11,7 @@ const cache = {};
 
 const _get = async function(key) {
     var data = await STORAGE_AREAS[key].get(key);
-    return data[key] ?? STORAGE_DEFAULTS[key];
+    return data[key] ?? {};
 };
 
 export const get = async function(key) {
