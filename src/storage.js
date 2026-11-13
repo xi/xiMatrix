@@ -24,7 +24,7 @@ export const get = async function(key) {
 const _change = async function(key, fn) {
     var oldValue = await get(key);
     var newValue = fn(oldValue);
-    cache[key] = newValue;
+    cache[key] = Promise.resolve(newValue);
     await STORAGE_AREAS[key].set({[key]: newValue});
 };
 
