@@ -187,26 +187,24 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
         const last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url, patterns);
     }
+    const rules = getRules(context);
     const hostname = getHostname(details.url, patterns);
     const type = shared.TYPE_MAP[details.type] || 'other';
 
-    const rules = getRules(context);
-
+    const allowType = details.type !== 'main_frame'
+        && shared.shouldAllow(rules, context, hostname, type);
     if (details.type !== 'main_frame') {
-        const allowed = shared.shouldAllow(rules, context, hostname, type);
-        await pushRequest(details.tabId, hostname, type, allowed);
+        await pushRequest(details.tabId, hostname, type, allowType);
     }
 
     const isCookie = h => h.name.toLowerCase() === 'cookie';
-    if (details.requestHeaders.some(isCookie)) {
-        const allowed = shared.shouldAllow(rules, context, hostname, 'cookie');
-        await pushRequest(details.tabId, hostname, 'cookie', allowed);
+    const hasCookie = details.requestHeaders.some(isCookie);
+    const allowCookie = hasCookie && shared.shouldAllow(rules, context, hostname, 'cookie');
+    if (hasCookie) {
+        await pushRequest(details.tabId, hostname, 'cookie', allowCookie);
     }
 
-    if (
-        details.type !== 'main_frame'
-        && !shared.shouldAllow(rules, context, hostname, type)
-    ) {
+    if (details.type !== 'main_frame' && !allowType) {
         if (details.type === 'sub_frame') {
             // this can in turn be blocked by a local CSP
             return {redirectUrl: 'data:,' + encodeURIComponent(details.url)};
@@ -215,7 +213,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
         }
     }
 
-    if (shared.shouldAllow(rules, context, hostname, 'cookie')) {
+    if (!hasCookie || allowCookie) {
         return {requestHeaders: details.requestHeaders};
     } else {
         const filtered = details.requestHeaders.filter(h => !isCookie(h));
