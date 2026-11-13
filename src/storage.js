@@ -9,22 +9,18 @@ const STORAGE_AREAS = {
 var lock = Promise.resolve();
 const cache = {};
 
-const _get = async function(key) {
-    var data = await STORAGE_AREAS[key].get(key);
-    return data[key] ?? {};
-};
+await Promise.all(Object.entries(STORAGE_AREAS).map(async ([key, area]) => {
+    var data = await area.get(key);
+    cache[key] = data[key] ?? {};
+}));
 
-export const get = async function(key) {
-    if (!cache[key]) {
-        cache[key] = _get(key);
-    }
-    return await cache[key];
+export const get = function(key) {
+    return cache[key];
 };
 
 const _change = async function(key, fn) {
-    var oldValue = await get(key);
-    var newValue = fn(oldValue);
-    cache[key] = Promise.resolve(newValue);
+    var newValue = fn(cache[key]);
+    cache[key] = newValue;
     await STORAGE_AREAS[key].set({[key]: newValue});
 };
 

@@ -21,7 +21,7 @@ const getHostname = function(url, patterns) {
 };
 
 const setRule = async function(context, hostname, type, allow) {
-    var savedRules = await storage.get('savedRules');
+    var savedRules = storage.get('savedRules');
     await storage.change('rules', rules => {
         if (hostname === 'first-party') {
             context = '*';
@@ -47,16 +47,15 @@ const setRule = async function(context, hostname, type, allow) {
     });
 };
 
-const getPatterns = async function() {
-    var savedRules = await storage.get('savedRules');
+const getPatterns = function() {
+    var savedRules = storage.get('savedRules');
     return savedRules._patterns || [];
 };
 
-const getRules = async function(context) {
-    var [rules, savedRules] = await Promise.all([
-        storage.get('rules'),
-        storage.get('savedRules'),
-    ]);
+const getRules = function(context) {
+    var rules = storage.get('rules');
+    var savedRules = storage.get('savedRules');
+
     var restricted = {};
     restricted['*'] = rules['*'] || savedRules['*'] || {};
     restricted[context] = rules[context] || savedRules[context] || {};
@@ -121,15 +120,11 @@ const getCurrentTab = async function() {
 
 browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type === 'get') {
-        const [tab, patterns] = await Promise.all([
-            getCurrentTab(),
-            getPatterns(),
-        ]);
+        const tab = await getCurrentTab();
+        const patterns = getPatterns();
         const context = getHostname(tab.url, patterns);
-        const [rules, requests] = await Promise.all([
-            getRules(context),
-            storage.get('requests'),
-        ]);
+        const rules = getRules(context);
+        const requests = storage.get('requests');
         return {
             context: context,
             rules: rules,
@@ -142,7 +137,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             msg.data.type,
             msg.data.allow,
         );
-        return await getRules(msg.data.context);
+        return getRules(msg.data.context);
     } else if (msg.type === 'commit') {
         let r;
         await storage.change('rules', rules => {
@@ -164,9 +159,9 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             return rules;
         });
     } else if (msg.type === 'securitypolicyviolation') {
-        var patterns = await getPatterns();
+        var patterns = getPatterns();
         var context = getHostname(sender.tab.url, patterns);
-        var rules = await getRules(context);
+        var rules = getRules(context);
         var allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
         await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     }
@@ -180,7 +175,7 @@ browser.webNavigation.onBeforeNavigate.addListener(async details => {
 });
 
 browser.webRequest.onBeforeSendHeaders.addListener(async details => {
-    var patterns = await getPatterns();
+    var patterns = getPatterns();
     var context = getHostname(details.documentUrl || details.url, patterns);
     if (details.frameAncestors && details.frameAncestors.length) {
         var last = details.frameAncestors.length - 1;
@@ -189,7 +184,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     var hostname = getHostname(details.url, patterns);
     var type = shared.TYPE_MAP[details.type] || 'other';
 
-    var rules = await getRules(context);
+    var rules = getRules(context);
 
     if (details.type !== 'main_frame') {
         const allowed = shared.shouldAllow(rules, context, hostname, type);
@@ -223,9 +218,9 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
 }, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
 browser.webRequest.onHeadersReceived.addListener(async details => {
-    var patterns = await getPatterns();
+    var patterns = getPatterns();
     var context = getHostname(details.url, patterns);
-    var rules = await getRules(context);
+    var rules = getRules(context);
     var csp = (type, value) => {
         var name = 'Content-Security-Policy';
         if (shared.shouldAllow(rules, context, 'inline', type)) {
