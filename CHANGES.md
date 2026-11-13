@@ -1,3 +1,9 @@
+# 0.12.0 (2026-11-13)
+
+-   fix saving changes in settings
+-   internal refactoring
+
+
 # 0.11.2 (2026-06-13)
 
 -   fix reset when no unsaved rules exist
