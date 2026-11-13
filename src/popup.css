@@ -1,4 +1,6 @@
 :root {
+	color-scheme: light dark;
+
 	--green-light: #d0f0d0;
 	--green-dark: #080;
 	--red-light: #f8d0d0;
@@ -61,10 +63,4 @@ table input ~ span {
 }
 table input:checked ~ span {
 	color: var(--text-on-dark);
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		color-scheme: dark;
-	}
 }
