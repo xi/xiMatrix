@@ -15,14 +15,14 @@ const permissions = {
     origins: ['<all_urls>'],
 };
 
-const sendMessage = async function(type, data) {
+async function sendMessage(type, data) {
     return await browser.runtime.sendMessage({type: type, data: data});
-};
+}
 
-const getHostnames = function() {
+function getHostnames() {
     let hostnames = [];
 
-    const addSubdomains = function(h) {
+    const addSubdomains = h => {
         if (['inline', 'first-party', '*'].includes(h)) {
             return;
         }
@@ -55,9 +55,9 @@ const getHostnames = function() {
         .map(a => a[1].reverse().join('.'));
 
     return hostnames.filter((value, i) => hostnames.indexOf(value) === i);
-};
+}
 
-const updateInherit = function(type) {
+function updateInherit(type) {
     let selector = 'input';
     if (type !== '*') {
         selector += `[data-type="${type}"]`;
@@ -70,9 +70,9 @@ const updateInherit = function(type) {
             input.dataset.type,
         ));
     });
-};
+}
 
-const createCheckbox = function(hostname, type) {
+function createCheckbox(hostname, type) {
     const input = document.createElement('input');
     input.type = 'checkbox';
     input.dataset.hostname = hostname;
@@ -95,9 +95,9 @@ const createCheckbox = function(hostname, type) {
     };
 
     return input;
-};
+}
 
-const createCell = function(tag, hostname, type, text) {
+function createCell(tag, hostname, type, text) {
     const cell = document.createElement(tag);
     cell.append(createCheckbox(hostname, type));
 
@@ -106,9 +106,9 @@ const createCell = function(tag, hostname, type, text) {
     cell.append(span);
 
     return cell;
-};
+}
 
-const createHeader = function() {
+function createHeader() {
     const tr = document.createElement('tr');
 
     const th = document.createElement('th');
@@ -119,9 +119,9 @@ const createHeader = function() {
         tr.append(createCell('th', '*', type, type));
     }
     return tr;
-};
+}
 
-const createRow = function(hostname) {
+function createRow(hostname) {
     const tr = document.createElement('tr');
     tr.append(createCell('th', hostname, '*', hostname));
     for (const type of shared.TYPES) {
@@ -136,9 +136,9 @@ const createRow = function(hostname) {
         }
     }
     return tr;
-};
+}
 
-const loadContext = async function() {
+async function loadContext() {
     const data = await sendMessage('get');
     context = data.context;
     requests = data.requests;
@@ -156,7 +156,7 @@ const loadContext = async function() {
     }
 
     updateInherit('*');
-};
+}
 
 browser.webNavigation.onBeforeNavigate.addListener(details => {
     if (details.frameId === 0) {

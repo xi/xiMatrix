@@ -12,7 +12,7 @@ export const TYPE_MAP = {
     'sub_frame': 'frame',
 };
 
-export const shouldAllow = function(rules, context, hostname, type) {
+export function shouldAllow(rules, context, hostname, type) {
     const hostnames = ['*', hostname];
     const parts = hostname.split('.');
     while (parts.length > 2) {
@@ -30,4 +30,4 @@ export const shouldAllow = function(rules, context, hostname, type) {
             });
         });
     });
-};
+}

@@ -3,12 +3,12 @@
 import * as shared from './shared.js';
 import * as storage from './storage.js';
 
-const glob = function(s, pattern) {
+function glob(s, pattern) {
     const p = pattern.split('*');
     return s.startsWith(p[0]) && s.endsWith(p.at(-1));
-};
+}
 
-const getHostname = function(url, patterns) {
+function getHostname(url, patterns) {
     const u = new URL(url);
 
     for (const pattern of patterns) {
@@ -18,9 +18,9 @@ const getHostname = function(url, patterns) {
     }
 
     return u.hostname;
-};
+}
 
-const setRule = async function(context, hostname, type, allow) {
+async function setRule(context, hostname, type, allow) {
     const savedRules = storage.get('savedRules');
     await storage.change('rules', rules => {
         if (hostname === 'first-party') {
@@ -45,14 +45,14 @@ const setRule = async function(context, hostname, type, allow) {
         }
         return rules;
     });
-};
+}
 
-const getPatterns = function() {
+function getPatterns() {
     const savedRules = storage.get('savedRules');
     return savedRules._patterns || [];
-};
+}
 
-const getRules = function(context) {
+function getRules(context) {
     const rules = storage.get('rules');
     const savedRules = storage.get('savedRules');
 
@@ -61,9 +61,9 @@ const getRules = function(context) {
     restricted[context] = rules[context] || savedRules[context] || {};
     restricted.dirty = !!rules[context];
     return restricted;
-};
+}
 
-const increaseTotals = async function(tabId) {
+async function increaseTotals(tabId) {
     let value = 0;
     await storage.change('totals', totals => {
         value = (totals[tabId] || 0) + 1;
@@ -72,9 +72,9 @@ const increaseTotals = async function(tabId) {
     });
     await browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId});
     await browser.action.setBadgeText({text: '' + value, tabId: tabId});
-};
+}
 
-const pushRequest = async function(tabId, hostname, type, allowed) {
+async function pushRequest(tabId, hostname, type, allowed) {
     await storage.change('requests', requests => {
         if (!requests[tabId]) {
             requests[tabId] = {};
@@ -91,9 +91,9 @@ const pushRequest = async function(tabId, hostname, type, allowed) {
     if (!allowed) {
         await increaseTotals(tabId);
     }
-};
+}
 
-const clearRequests = async function(tabId) {
+async function clearRequests(tabId) {
     await Promise.all([
         storage.change('requests', requests => {
             if (requests[tabId]) {
@@ -108,15 +108,15 @@ const clearRequests = async function(tabId) {
             return totals;
         }),
     ]);
-};
+}
 
-const getCurrentTab = async function() {
+async function getCurrentTab() {
     const tabs = await browser.tabs.query({
         active: true,
         currentWindow: true,
     });
     return tabs[0];
-};
+}
 
 browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type === 'get') {

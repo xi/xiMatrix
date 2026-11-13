@@ -14,17 +14,17 @@ await Promise.all(Object.entries(STORAGE_AREAS).map(async ([key, area]) => {
     cache[key] = data[key] ?? {};
 }));
 
-export const get = function(key) {
+export function get(key) {
     return cache[key];
-};
+}
 
-const _change = async function(key, fn) {
+async function _change(key, fn) {
     const newValue = fn(cache[key]);
     cache[key] = newValue;
     await STORAGE_AREAS[key].set({[key]: newValue});
-};
+}
 
-export const change = async function(key, fn) {
+export async function change(key, fn) {
     lock = lock.then(() => _change(key, fn));
     await lock;
-};
+}
