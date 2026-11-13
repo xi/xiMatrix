@@ -4,14 +4,14 @@ import * as shared from './shared.js';
 import * as storage from './storage.js';
 
 const glob = function(s, pattern) {
-    var p = pattern.split('*');
+    const p = pattern.split('*');
     return s.startsWith(p[0]) && s.endsWith(p.at(-1));
 };
 
 const getHostname = function(url, patterns) {
-    var u = new URL(url);
+    const u = new URL(url);
 
-    for (var pattern of patterns) {
+    for (const pattern of patterns) {
         if (glob(u.hostname, pattern)) {
             return pattern;
         }
@@ -21,7 +21,7 @@ const getHostname = function(url, patterns) {
 };
 
 const setRule = async function(context, hostname, type, allow) {
-    var savedRules = storage.get('savedRules');
+    const savedRules = storage.get('savedRules');
     await storage.change('rules', rules => {
         if (hostname === 'first-party') {
             context = '*';
@@ -48,15 +48,15 @@ const setRule = async function(context, hostname, type, allow) {
 };
 
 const getPatterns = function() {
-    var savedRules = storage.get('savedRules');
+    const savedRules = storage.get('savedRules');
     return savedRules._patterns || [];
 };
 
 const getRules = function(context) {
-    var rules = storage.get('rules');
-    var savedRules = storage.get('savedRules');
+    const rules = storage.get('rules');
+    const savedRules = storage.get('savedRules');
 
-    var restricted = {};
+    const restricted = {};
     restricted['*'] = rules['*'] || savedRules['*'] || {};
     restricted[context] = rules[context] || savedRules[context] || {};
     restricted.dirty = !!rules[context];
@@ -64,7 +64,7 @@ const getRules = function(context) {
 };
 
 const increaseTotals = async function(tabId) {
-    var value = 0;
+    let value = 0;
     await storage.change('totals', totals => {
         value = (totals[tabId] || 0) + 1;
         totals[tabId] = value;
@@ -111,7 +111,7 @@ const clearRequests = async function(tabId) {
 };
 
 const getCurrentTab = async function() {
-    var tabs = await browser.tabs.query({
+    const tabs = await browser.tabs.query({
         active: true,
         currentWindow: true,
     });
@@ -159,10 +159,10 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             return rules;
         });
     } else if (msg.type === 'securitypolicyviolation') {
-        var patterns = getPatterns();
-        var context = getHostname(sender.tab.url, patterns);
-        var rules = getRules(context);
-        var allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
+        const patterns = getPatterns();
+        const context = getHostname(sender.tab.url, patterns);
+        const rules = getRules(context);
+        const allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
         await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     }
 });
@@ -175,23 +175,23 @@ browser.webNavigation.onBeforeNavigate.addListener(async details => {
 });
 
 browser.webRequest.onBeforeSendHeaders.addListener(async details => {
-    var patterns = getPatterns();
-    var context = getHostname(details.documentUrl || details.url, patterns);
+    const patterns = getPatterns();
+    let context = getHostname(details.documentUrl || details.url, patterns);
     if (details.frameAncestors && details.frameAncestors.length) {
-        var last = details.frameAncestors.length - 1;
+        const last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url, patterns);
     }
-    var hostname = getHostname(details.url, patterns);
-    var type = shared.TYPE_MAP[details.type] || 'other';
+    const hostname = getHostname(details.url, patterns);
+    const type = shared.TYPE_MAP[details.type] || 'other';
 
-    var rules = getRules(context);
+    const rules = getRules(context);
 
     if (details.type !== 'main_frame') {
         const allowed = shared.shouldAllow(rules, context, hostname, type);
         await pushRequest(details.tabId, hostname, type, allowed);
     }
 
-    var isCookie = h => h.name.toLowerCase() === 'cookie';
+    const isCookie = h => h.name.toLowerCase() === 'cookie';
     if (details.requestHeaders.some(isCookie)) {
         const allowed = shared.shouldAllow(rules, context, hostname, 'cookie');
         await pushRequest(details.tabId, hostname, 'cookie', allowed);
@@ -212,17 +212,17 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     if (shared.shouldAllow(rules, context, hostname, 'cookie')) {
         return {requestHeaders: details.requestHeaders};
     } else {
-        var filtered = details.requestHeaders.filter(h => !isCookie(h));
+        const filtered = details.requestHeaders.filter(h => !isCookie(h));
         return {requestHeaders: filtered};
     }
 }, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
 browser.webRequest.onHeadersReceived.addListener(async details => {
-    var patterns = getPatterns();
-    var context = getHostname(details.url, patterns);
-    var rules = getRules(context);
-    var csp = (type, value) => {
-        var name = 'Content-Security-Policy';
+    const patterns = getPatterns();
+    const context = getHostname(details.url, patterns);
+    const rules = getRules(context);
+    const csp = (type, value) => {
+        let name = 'Content-Security-Policy';
         if (shared.shouldAllow(rules, context, 'inline', type)) {
             name = 'Content-Security-Policy-Report-Only';
         }

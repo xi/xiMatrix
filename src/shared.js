@@ -13,8 +13,8 @@ export const TYPE_MAP = {
 };
 
 export const shouldAllow = function(rules, context, hostname, type) {
-    var hostnames = ['*', hostname];
-    var parts = hostname.split('.');
+    const hostnames = ['*', hostname];
+    const parts = hostname.split('.');
     while (parts.length > 2) {
         parts.shift();
         hostnames.push(parts.join('.'));

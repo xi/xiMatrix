@@ -12,7 +12,7 @@ const TYPE_MAP = {
 };
 
 document.addEventListener('securitypolicyviolation', event => {
-    var type = TYPE_MAP[event.effectiveDirective];
+    const type = TYPE_MAP[event.effectiveDirective];
     if (type) {
         browser.runtime.sendMessage({
             type: 'securitypolicyviolation',

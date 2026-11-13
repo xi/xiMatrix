@@ -6,11 +6,11 @@ const STORAGE_AREAS = {
     'requests': browser.storage.session,
     'totals': browser.storage.session,
 };
-var lock = Promise.resolve();
+let lock = Promise.resolve();
 const cache = {};
 
 await Promise.all(Object.entries(STORAGE_AREAS).map(async ([key, area]) => {
-    var data = await area.get(key);
+    const data = await area.get(key);
     cache[key] = data[key] ?? {};
 }));
 
@@ -19,7 +19,7 @@ export const get = function(key) {
 };
 
 const _change = async function(key, fn) {
-    var newValue = fn(cache[key]);
+    const newValue = fn(cache[key]);
     cache[key] = newValue;
     await STORAGE_AREAS[key].set({[key]: newValue});
 };

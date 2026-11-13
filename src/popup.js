@@ -2,9 +2,9 @@
 
 import * as shared from './shared.js';
 
-var context;
-var requests;
-var rules;
+let context;
+let requests;
+let rules;
 
 const table = document.querySelector('table');
 const commitButton = document.querySelector('[name="commit"]');
@@ -20,14 +20,14 @@ const sendMessage = async function(type, data) {
 };
 
 const getHostnames = function() {
-    var hostnames = [];
+    let hostnames = [];
 
-    var addSubdomains = function(h) {
+    const addSubdomains = function(h) {
         if (['inline', 'first-party', '*'].includes(h)) {
             return;
         }
         hostnames.unshift(h);
-        var parts = h.split('.');
+        const parts = h.split('.');
         while (parts.length > 2) {
             parts.shift();
             hostnames.unshift(parts.join('.'));
@@ -43,12 +43,12 @@ const getHostnames = function() {
 
     addSubdomains(context);
 
-    var contextRoot = context.split('.').slice(-2).join('.');
+    const contextRoot = context.split('.').slice(-2).join('.');
     hostnames = hostnames
         .map(h => {
-            var parts = h.split('.');
-            var root = parts.slice(-2).join('.');
-            var isContext = root === contextRoot ? 0 : 1;
+            const parts = h.split('.');
+            const root = parts.slice(-2).join('.');
+            const isContext = root === contextRoot ? 0 : 1;
             return [isContext, parts.reverse()];
         })
         .sort()
@@ -58,7 +58,7 @@ const getHostnames = function() {
 };
 
 const updateInherit = function(type) {
-    var selector = 'input';
+    let selector = 'input';
     if (type !== '*') {
         selector += `[data-type="${type}"]`;
     }
@@ -73,16 +73,16 @@ const updateInherit = function(type) {
 };
 
 const createCheckbox = function(hostname, type) {
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.type = 'checkbox';
     input.dataset.hostname = hostname;
     input.dataset.type = type;
 
-    var c = (hostname === 'first-party') ? '*' : context;
+    const c = (hostname === 'first-party') ? '*' : context;
     input.checked = (rules[c][hostname] || {})[type];
 
     input.onchange = async () => {
-        var newRules = await sendMessage('setRule', {
+        const newRules = await sendMessage('setRule', {
             context: context,
             hostname: hostname,
             type: type,
@@ -109,9 +109,9 @@ const createCell = function(tag, hostname, type, text) {
 };
 
 const createHeader = function() {
-    var tr = document.createElement('tr');
+    const tr = document.createElement('tr');
 
-    var th = document.createElement('th');
+    const th = document.createElement('th');
     th.textContent = context;
     tr.append(th);
 
@@ -122,7 +122,7 @@ const createHeader = function() {
 };
 
 const createRow = function(hostname) {
-    var tr = document.createElement('tr');
+    const tr = document.createElement('tr');
     tr.append(createCell('th', hostname, '*', hostname));
     for (const type of shared.TYPES) {
         const count = (requests[hostname] || {})[type];
@@ -139,7 +139,7 @@ const createRow = function(hostname) {
 };
 
 const loadContext = async function() {
-    var data = await sendMessage('get');
+    const data = await sendMessage('get');
     context = data.context;
     requests = data.requests;
     rules = data.rules;
@@ -169,7 +169,7 @@ document.querySelector('[name="settings"]').addEventListener('click', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    var hasPermissions = await browser.permissions.contains(permissions);
+    const hasPermissions = await browser.permissions.contains(permissions);
     if (hasPermissions) {
         await loadContext();
     } else {
