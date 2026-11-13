@@ -70,8 +70,10 @@ async function increaseTotals(tabId) {
         totals[tabId] = value;
         return totals;
     });
-    await browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId});
-    await browser.action.setBadgeText({text: '' + value, tabId: tabId});
+    await Promise.all([
+        browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId}),
+        browser.action.setBadgeText({text: '' + value, tabId: tabId}),
+    ]);
 }
 
 async function pushRequest(tabId, hostname, type, allowed) {
