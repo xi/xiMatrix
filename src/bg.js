@@ -160,6 +160,10 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             delete rules[msg.data];
             return rules;
         });
+    } else if (msg.type === 'replaceRules') {
+        const {rules, savedRules} = msg.data;
+        await storage.change('rules', () => rules);
+        await storage.change('savedRules', () => savedRules);
     } else if (msg.type === 'securitypolicyviolation') {
         const patterns = getPatterns();
         const context = getHostname(sender.tab.url, patterns);

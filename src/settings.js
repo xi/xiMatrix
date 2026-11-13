@@ -1,3 +1,5 @@
+/* global browser */
+
 import * as storage from './storage.js';
 
 const form = document.querySelector('form');
@@ -19,10 +21,11 @@ form.addEventListener('change', event => {
 
 form.addEventListener('submit', async event => {
     event.preventDefault();
-    await storage.change('rules', () => {
-        return JSON.parse(textarea1.value);
-    });
-    await storage.change('savedRules', () => {
-        return JSON.parse(textarea2.value);
+    await browser.runtime.sendMessage({
+        type: 'replaceRules',
+        data: {
+            rules: JSON.parse(textarea1.value),
+            savedRules: JSON.parse(textarea2.value),
+        },
     });
 });
