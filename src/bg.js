@@ -52,7 +52,7 @@ function getPatterns() {
     return savedRules._patterns || [];
 }
 
-function getRules(context) {
+function getCtxRules(context) {
     const rules = storage.get('rules');
     const savedRules = storage.get('savedRules');
 
@@ -125,11 +125,11 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const tab = await getCurrentTab();
         const patterns = getPatterns();
         const context = getHostname(tab.url, patterns);
-        const rules = getRules(context);
+        const ctxRules = getCtxRules(context);
         const requests = storage.get('requests');
         return {
             context: context,
-            rules: rules,
+            rules: ctxRules,
             requests: requests[tab.id] || {},
         };
     } else if (msg.type === 'setRule') {
@@ -139,7 +139,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             msg.data.type,
             msg.data.allow,
         );
-        return getRules(msg.data.context);
+        return getCtxRules(msg.data.context);
     } else if (msg.type === 'commit') {
         let r;
         await storage.change('rules', rules => {
@@ -163,8 +163,8 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     } else if (msg.type === 'securitypolicyviolation') {
         const patterns = getPatterns();
         const context = getHostname(sender.tab.url, patterns);
-        const rules = getRules(context);
-        const allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
+        const ctxRules = getCtxRules(context);
+        const allowed = shared.shouldAllow(ctxRules, context, 'inline', msg.data);
         await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     } else if (msg.type === 'getSettings') {
         const rules = storage.get('rules');
@@ -191,19 +191,19 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
         const last = details.frameAncestors.length - 1;
         context = getHostname(details.frameAncestors[last].url, patterns);
     }
-    const rules = getRules(context);
+    const ctxRules = getCtxRules(context);
     const hostname = getHostname(details.url, patterns);
     const type = shared.TYPE_MAP[details.type] || 'other';
 
     const allowType = details.type !== 'main_frame'
-        && shared.shouldAllow(rules, context, hostname, type);
+        && shared.shouldAllow(ctxRules, context, hostname, type);
     if (details.type !== 'main_frame') {
         await pushRequest(details.tabId, hostname, type, allowType);
     }
 
     const isCookie = h => h.name.toLowerCase() === 'cookie';
     const hasCookie = details.requestHeaders.some(isCookie);
-    const allowCookie = hasCookie && shared.shouldAllow(rules, context, hostname, 'cookie');
+    const allowCookie = hasCookie && shared.shouldAllow(ctxRules, context, hostname, 'cookie');
     if (hasCookie) {
         await pushRequest(details.tabId, hostname, 'cookie', allowCookie);
     }
@@ -228,10 +228,10 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
 browser.webRequest.onHeadersReceived.addListener(details => {
     const patterns = getPatterns();
     const context = getHostname(details.url, patterns);
-    const rules = getRules(context);
+    const ctxRules = getCtxRules(context);
     const csp = (type, value) => {
         let name = 'Content-Security-Policy';
-        if (shared.shouldAllow(rules, context, 'inline', type)) {
+        if (shared.shouldAllow(ctxRules, context, 'inline', type)) {
             name = 'Content-Security-Policy-Report-Only';
         }
         details.responseHeaders.push({
