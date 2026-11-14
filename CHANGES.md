@@ -1,3 +1,8 @@
+# 0.12.1 (2026-11-14)
+
+-   internal optimization
+
+
 # 0.12.0 (2026-11-13)
 
 -   fix saving changes in settings
