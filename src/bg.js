@@ -1,7 +1,6 @@
 /* global browser */
 
 import * as shared from './shared.js';
-import * as storage from './storage.js';
 
 let sessionTimeoutId = null;
 const badgeTimeoutIds = {};
@@ -9,6 +8,10 @@ const badgeTimeoutIds = {};
 const sessionData = await browser.storage.session.get(['requests', 'totals']);
 const requests = sessionData.requests ?? {};
 const totals = sessionData.totals ?? {};
+
+const localData = await browser.storage.local.get(['rules', 'savedRules']);
+let rules = localData.rules ?? {};
+let savedRules = localData.savedRules ?? {};
 
 function invalidateSessionStorage() {
     if (sessionTimeoutId) return;
@@ -49,41 +52,34 @@ function getHostname(url, patterns) {
 }
 
 async function setRule(context, hostname, type, allow) {
-    const savedRules = storage.get('savedRules');
-    await storage.change('rules', rules => {
-        if (hostname === 'first-party') {
-            context = '*';
+    if (hostname === 'first-party') {
+        context = '*';
+    }
+    if (!rules[context]) {
+        rules[context] = structuredClone(savedRules[context]) || {};
+    }
+    if (!rules[context][hostname]) {
+        rules[context][hostname] = {};
+    }
+    if (allow) {
+        rules[context][hostname][type] = allow;
+    } else {
+        delete rules[context][hostname][type];
+        if (Object.keys(rules[context][hostname]).length === 0) {
+            delete rules[context][hostname];
         }
-        if (!rules[context]) {
-            rules[context] = structuredClone(savedRules[context]) || {};
+        if (Object.keys(rules[context]).length === 0 && !savedRules[context]) {
+            delete rules[context];
         }
-        if (!rules[context][hostname]) {
-            rules[context][hostname] = {};
-        }
-        if (allow) {
-            rules[context][hostname][type] = allow;
-        } else {
-            delete rules[context][hostname][type];
-            if (Object.keys(rules[context][hostname]).length === 0) {
-                delete rules[context][hostname];
-            }
-            if (Object.keys(rules[context]).length === 0 && !savedRules[context]) {
-                delete rules[context];
-            }
-        }
-        return rules;
-    });
+    }
+    await browser.storage.local.set({rules});
 }
 
 function getPatterns() {
-    const savedRules = storage.get('savedRules');
     return savedRules._patterns || [];
 }
 
 function getCtxRules(context) {
-    const rules = storage.get('rules');
-    const savedRules = storage.get('savedRules');
-
     const restricted = {};
     restricted['*'] = rules['*'] || savedRules['*'] || {};
     restricted[context] = rules[context] || savedRules[context] || {};
@@ -152,25 +148,17 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         );
         return getCtxRules(msg.data.context);
     } else if (msg.type === 'commit') {
-        let r;
-        await storage.change('rules', rules => {
-            r = rules[msg.data];
-            delete rules[msg.data];
-            return rules;
-        });
-        await storage.change('savedRules', savedRules => {
-            if (Object.keys(r).length === 0) {
-                delete savedRules[msg.data];
-            } else {
-                savedRules[msg.data] = structuredClone(r);
-            }
-            return savedRules;
-        });
+        const r = rules[msg.data];
+        delete rules[msg.data];
+        if (!Object.keys(r).length) {
+            delete savedRules[msg.data];
+        } else {
+            savedRules[msg.data] = structuredClone(r);
+        }
+        await browser.storage.local.set({rules, savedRules});
     } else if (msg.type === 'reset') {
-        await storage.change('rules', rules => {
-            delete rules[msg.data];
-            return rules;
-        });
+        delete rules[msg.data];
+        await browser.storage.local.set({rules});
     } else if (msg.type === 'securitypolicyviolation') {
         const patterns = getPatterns();
         const context = getHostname(sender.tab.url, patterns);
@@ -178,13 +166,11 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const allowed = shared.shouldAllow(ctxRules, context, 'inline', msg.data);
         pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     } else if (msg.type === 'getSettings') {
-        const rules = storage.get('rules');
-        const savedRules = storage.get('savedRules');
         return {rules, savedRules};
     } else if (msg.type === 'setSettings') {
-        const {rules, savedRules} = msg.data;
-        await storage.change('rules', () => rules);
-        await storage.change('savedRules', () => savedRules);
+        rules = msg.data.rules;
+        savedRules = msg.data.savedRules;
+        await browser.storage.local.set({rules, savedRules});
     }
 });
 
