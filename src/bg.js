@@ -223,7 +223,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     }
 }, {urls: ['<all_urls>']}, ['blocking', 'requestHeaders']);
 
-browser.webRequest.onHeadersReceived.addListener(async details => {
+browser.webRequest.onHeadersReceived.addListener(details => {
     const patterns = getPatterns();
     const context = getHostname(details.url, patterns);
     const rules = getRules(context);
