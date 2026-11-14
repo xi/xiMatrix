@@ -3,6 +3,34 @@
 import * as shared from './shared.js';
 import * as storage from './storage.js';
 
+let sessionTimeoutId = null;
+const badgeTimeoutIds = {};
+
+const sessionData = await browser.storage.session.get(['requests', 'totals']);
+const requests = sessionData.requests ?? {};
+const totals = sessionData.totals ?? {};
+
+function invalidateSessionStorage() {
+    if (sessionTimeoutId) return;
+
+    sessionTimeoutId = setTimeout(async () => {
+        sessionTimeoutId = null;
+        await browser.storage.session.set({requests, totals});
+    }, 500);
+}
+
+function invalidateBadge(tabId) {
+    if (badgeTimeoutIds[tabId]) return;
+
+    badgeTimeoutIds[tabId] = setTimeout(async () => {
+        delete badgeTimeoutIds[tabId];
+        await Promise.all([
+            browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId}),
+            browser.action.setBadgeText({text: `${totals[tabId]}`, tabId: tabId}),
+        ]);
+    }, 100);
+}
+
 function glob(s, pattern) {
     const p = pattern.split('*');
     return s.startsWith(p[0]) && s.endsWith(p.at(-1));
@@ -63,53 +91,37 @@ function getCtxRules(context) {
     return restricted;
 }
 
-async function increaseTotals(tabId) {
-    let value = 0;
-    await storage.change('totals', totals => {
-        value = (totals[tabId] || 0) + 1;
-        totals[tabId] = value;
-        return totals;
-    });
-    await Promise.all([
-        browser.action.setBadgeBackgroundColor({color: '#6b6b6b', tabId: tabId}),
-        browser.action.setBadgeText({text: '' + value, tabId: tabId}),
-    ]);
-}
-
-async function pushRequest(tabId, hostname, type, allowed) {
-    await storage.change('requests', requests => {
-        if (!requests[tabId]) {
-            requests[tabId] = {};
-        }
-        if (!requests[tabId][hostname]) {
-            requests[tabId][hostname] = {};
-        }
-        if (!requests[tabId][hostname][type]) {
-            requests[tabId][hostname][type] = 0;
-        }
-        requests[tabId][hostname][type] += 1;
-        return requests;
-    });
-    if (!allowed) {
-        await increaseTotals(tabId);
+function pushRequest(tabId, hostname, type, allowed) {
+    if (!requests[tabId]) {
+        requests[tabId] = {};
     }
+    if (!requests[tabId][hostname]) {
+        requests[tabId][hostname] = {};
+    }
+    if (!requests[tabId][hostname][type]) {
+        requests[tabId][hostname][type] = 0;
+    }
+    requests[tabId][hostname][type] += 1;
+    if (!allowed) {
+        totals[tabId] = (totals[tabId] || 0) + 1;
+        invalidateBadge(tabId);
+    }
+    invalidateSessionStorage();
 }
 
-async function clearRequests(tabId) {
-    await Promise.all([
-        storage.change('requests', requests => {
-            if (requests[tabId]) {
-                delete requests[tabId];
-            }
-            return requests;
-        }),
-        storage.change('totals', totals => {
-            if (totals[tabId]) {
-                delete totals[tabId];
-            }
-            return totals;
-        }),
-    ]);
+function clearRequests(tabId) {
+    if (requests[tabId]) {
+        delete requests[tabId];
+        invalidateSessionStorage();
+    }
+    if (totals[tabId]) {
+        delete totals[tabId];
+        invalidateSessionStorage();
+    }
+    if (badgeTimeoutIds[tabId]) {
+        clearTimeout(badgeTimeoutIds[tabId]);
+        delete badgeTimeoutIds[tabId];
+    }
 }
 
 async function getCurrentTab() {
@@ -126,7 +138,6 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const patterns = getPatterns();
         const context = getHostname(tab.url, patterns);
         const ctxRules = getCtxRules(context);
-        const requests = storage.get('requests');
         return {
             context: context,
             rules: ctxRules,
@@ -165,7 +176,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const context = getHostname(sender.tab.url, patterns);
         const ctxRules = getCtxRules(context);
         const allowed = shared.shouldAllow(ctxRules, context, 'inline', msg.data);
-        await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
+        pushRequest(sender.tab.id, 'inline', msg.data, allowed);
     } else if (msg.type === 'getSettings') {
         const rules = storage.get('rules');
         const savedRules = storage.get('savedRules');
@@ -178,13 +189,13 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
 });
 
 browser.tabs.onRemoved.addListener(clearRequests);
-browser.webNavigation.onBeforeNavigate.addListener(async details => {
+browser.webNavigation.onBeforeNavigate.addListener(details => {
     if (details.frameId === 0) {
-        await clearRequests(details.tabId);
+        clearRequests(details.tabId);
     }
 });
 
-browser.webRequest.onBeforeSendHeaders.addListener(async details => {
+browser.webRequest.onBeforeSendHeaders.addListener(details => {
     const patterns = getPatterns();
     let context = getHostname(details.documentUrl || details.url, patterns);
     if (details.frameAncestors && details.frameAncestors.length) {
@@ -198,14 +209,14 @@ browser.webRequest.onBeforeSendHeaders.addListener(async details => {
     const allowType = details.type !== 'main_frame'
         && shared.shouldAllow(ctxRules, context, hostname, type);
     if (details.type !== 'main_frame') {
-        await pushRequest(details.tabId, hostname, type, allowType);
+        pushRequest(details.tabId, hostname, type, allowType);
     }
 
     const isCookie = h => h.name.toLowerCase() === 'cookie';
     const hasCookie = details.requestHeaders.some(isCookie);
     const allowCookie = hasCookie && shared.shouldAllow(ctxRules, context, hostname, 'cookie');
     if (hasCookie) {
-        await pushRequest(details.tabId, hostname, 'cookie', allowCookie);
+        pushRequest(details.tabId, hostname, 'cookie', allowCookie);
     }
 
     if (details.type !== 'main_frame' && !allowType) {
