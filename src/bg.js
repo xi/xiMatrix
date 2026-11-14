@@ -148,7 +148,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         );
         return getCtxRules(msg.data.context);
     } else if (msg.type === 'commit') {
-        const r = rules[msg.data];
+        const r = rules[msg.data] ?? {};
         delete rules[msg.data];
         if (!Object.keys(r).length) {
             delete savedRules[msg.data];
