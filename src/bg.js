@@ -160,16 +160,20 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             delete rules[msg.data];
             return rules;
         });
-    } else if (msg.type === 'replaceRules') {
-        const {rules, savedRules} = msg.data;
-        await storage.change('rules', () => rules);
-        await storage.change('savedRules', () => savedRules);
     } else if (msg.type === 'securitypolicyviolation') {
         const patterns = getPatterns();
         const context = getHostname(sender.tab.url, patterns);
         const rules = getRules(context);
         const allowed = shared.shouldAllow(rules, context, 'inline', msg.data);
         await pushRequest(sender.tab.id, 'inline', msg.data, allowed);
+    } else if (msg.type === 'getSettings') {
+        const rules = storage.get('rules');
+        const savedRules = storage.get('savedRules');
+        return {rules, savedRules};
+    } else if (msg.type === 'setSettings') {
+        const {rules, savedRules} = msg.data;
+        await storage.change('rules', () => rules);
+        await storage.change('savedRules', () => savedRules);
     }
 });
 

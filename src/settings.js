@@ -1,13 +1,12 @@
 /* global browser */
 
-import * as storage from './storage.js';
-
 const form = document.querySelector('form');
 const textarea1 = document.querySelector('textarea.rules');
 const textarea2 = document.querySelector('textarea.savedRules');
 
-textarea1.value = JSON.stringify(storage.get('rules'), null, 2);
-textarea2.value = JSON.stringify(storage.get('savedRules'), null, 2);
+const settings = await browser.runtime.sendMessage({type: 'getSettings'});
+textarea1.value = JSON.stringify(settings.rules, null, 2);
+textarea2.value = JSON.stringify(settings.savedRules, null, 2);
 
 form.addEventListener('change', event => {
     try {
@@ -22,7 +21,7 @@ form.addEventListener('change', event => {
 form.addEventListener('submit', async event => {
     event.preventDefault();
     await browser.runtime.sendMessage({
-        type: 'replaceRules',
+        type: 'setSettings',
         data: {
             rules: JSON.parse(textarea1.value),
             savedRules: JSON.parse(textarea2.value),
